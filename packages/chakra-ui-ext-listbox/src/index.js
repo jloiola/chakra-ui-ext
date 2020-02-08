@@ -7,6 +7,19 @@ import {useCombinedRefs} from './combined-refs';
 
 const stateReducer = (state, {changes, props, type}) => {
   switch (type) {
+    case useCombobox.stateChangeTypes.FunctionSelectItem:
+    case useCombobox.stateChangeTypes.InputChange:
+      if(!changes.inputValue) {
+        return changes;
+      }
+
+      // eslint-disable-next-line no-case-declarations
+      const highlightedIndex = props.items.findIndex((item) => {
+        const realText = props.itemToString(item);
+        return realText && realText.toLowerCase().startsWith(changes.inputValue.toLowerCase());
+      })
+
+      return {...changes, highlightedIndex};
     // disable Esc by passing the current state aka no changes
     case useCombobox.stateChangeTypes.InputKeyDownEscape:
       return {...state, isOpen: false}
