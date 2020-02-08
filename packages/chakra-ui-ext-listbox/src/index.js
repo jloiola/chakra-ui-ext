@@ -1,27 +1,12 @@
 import React, {useState, useEffect, useRef, forwardRef} from 'react';
 import {useCombobox} from 'downshift';
+import {useDebouncedCallback} from 'use-debounce';
 
-import {
-  Spinner, Input, InputGroup, InputRightElement, Icon, useTheme, Box
-} from '@chakra-ui/core';
-
+import { Spinner, Input, InputGroup, InputRightElement, Icon, useTheme, Box } from '@chakra-ui/core';
+import {useCombinedRefs} from './combined-refs';
 
 const stateReducer = (state, {changes, props, type}) => {
-
   switch (type) {
-    case useCombobox.stateChangeTypes.FunctionSelectItem:
-    case useCombobox.stateChangeTypes.InputChange:
-      if(!changes.inputValue) {
-        return changes;
-      }
-
-      // eslint-disable-next-line no-case-declarations
-      const highlightedIndex = props.items.findIndex((item) => {
-        const realText = props.itemToString(item);
-        return realText && realText.toLowerCase().startsWith(changes.inputValue.toLowerCase());
-      })
-
-      return {...changes, highlightedIndex};
     // disable Esc by passing the current state aka no changes
     case useCombobox.stateChangeTypes.InputKeyDownEscape:
       return {...state, isOpen: false}
@@ -31,7 +16,6 @@ const stateReducer = (state, {changes, props, type}) => {
 };
 
 const ListBox = forwardRef(({
-  mode='string', //mode='object',
   defaultInputValue='',
   defaultSelectedItem=null,
   valueKey='value',
@@ -47,15 +31,21 @@ const ListBox = forwardRef(({
   onInput=()=>{},
   onChange=() => {},
   itemRender=(item) => (<div>{item[textKey]}</div>),
+  debounceMs=333,
   ...rest
-}, innerRef) => {
+}, ref) => {
 
   const hasValue = (selectedItem) => (
     selectedItem && selectedItem[valueKey] !== undefined 
-  )
+  );
+
   const showMenu = (isOpen, isLoading, items) => (
     isOpen && !isLoading && items && items.length > 0
-  )
+  );
+
+  const [debouncedCallback] = useDebouncedCallback(async (inputValue) => {
+    await remoteData(onFetch, inputValue)
+  }, debounceMs);
 
   const [isLoading, setLoading] = useState(false);
   const [items, setItems] = useState(options);
@@ -66,7 +56,7 @@ const ListBox = forwardRef(({
     } else {
       return item[textKey];
     }
-  }  
+  };
 
   const theme = useTheme();
   focusBorderColor = focusBorderColor ? focusBorderColor : theme.colors.blue['500'];
@@ -104,9 +94,9 @@ const ListBox = forwardRef(({
     initialSelectedItem: defaultSelectedItem,
     initialInputValue: defaultInputValue,
     itemToString: getSelectedText,
-    onInputValueChange: async ({inputValue}) => {
-      if(onFetch) {
-        await remoteData(onFetch, inputValue)
+    onInputValueChange: async ({inputValue, selectedItem}) => {
+      if(onFetch && !selectedItem) {
+        debouncedCallback(inputValue)
       }
       onInput(inputValue)
     },
@@ -119,9 +109,15 @@ const ListBox = forwardRef(({
     try {
       setLoading(true)
       const items = await fetchFunction(inputValue);
-      const found = items.find((item) => item[textKey].toLowerCase() === inputValue.toLowerCase())
+      const found = items.find((item) => {
+        return (item[textKey].toLowerCase() === inputValue.toLowerCase()) ||
+          (selectedItem && selectedItem[valueKey].toString() === item[valueKey].toString());
+      })
       setItems(items)
-      selectItem(found)
+      if(found) {
+        selectItem(found)
+        setInputValue(found[textKey])
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -135,24 +131,26 @@ const ListBox = forwardRef(({
         await remoteData(onFetch, inputValue)
       }
     })()
-  }, [])
+  }, []);
+
+  const {inputRef, ...inputProps} = getInputProps({
+    refKey: 'inputRef',
+    onFocus: (e) => {
+      onFocus();
+    },
+    onClick: () => {
+      !hasValue(selectedItem) && openMenu();
+    },
+  });
+
+  const combinedRef = useCombinedRefs(ref, inputRef);
 
   return (
     <Box w='100%' position='relative' backgroundColor='white' {...rest}>
       <InputGroup w='100%' position='relative' {...getComboboxProps()}>
         <Input
-          {...getInputProps({
-              refKey: 'ref',
-              onFocus: () => {
-                console.log('onfocus')
-                onFocus();
-              },
-              onClick: () => {
-                console.log('openMenu')
-                openMenu()
-              },
-            })
-          }
+          ref={combinedRef}
+          {...inputProps}
           placeholder={placeholder}
           style={{
             flex: 1,
@@ -161,6 +159,7 @@ const ListBox = forwardRef(({
               `${theme.sizes['1']} ${theme.sizes['1']} 0 0` :
               `${theme.sizes['1']}`,
           }}
+          readOnly={hasValue(selectedItem)}
         />
 
         <InputRightElement
@@ -172,17 +171,19 @@ const ListBox = forwardRef(({
         >
           {hasValue(selectedItem) && !isLoading && (
             <Box
-              w={'1rem'}
+              w={'1.25rem'}
               fontSize={'0.625rem'}
               onClick={()=> {
                 selectItem(null);
+                setInputValue('');
+                combinedRef.current.focus()
               }}
             >
               <Icon name='close' />
             </Box>
           )}
 
-          {!isLoading && (
+          {!hasValue(selectedItem) && !isLoading && (
             <Box
               w={'1.5rem'}
               fontSize={'1.25rem'}

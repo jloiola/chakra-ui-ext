@@ -2,12 +2,20 @@ import React, {useState, useEffect} from 'react';
 import { storiesOf } from '@storybook/react';
 import ListBox from 'chakra-ui-ext-listbox';
 
-const fetchPeople = (search='') => {
+const fetchJediOrSith = (search='') => {
   return fetch(`https://swapi.co/api/people/?search=${search}`)
     .then(res => res.json())
     .then(({results}) => results)
     .catch(err => console.error(err))
 };
+
+const fetchRick = (search='') => {
+  return fetch(`https://rickandmortyapi.com/api/character/?name=${search}`)
+    .then(res => res.json())
+    .then(({results}) => results)
+    .catch(err => []);
+};
+
 
 storiesOf('ListBox', module)
   .addParameters({
@@ -51,12 +59,13 @@ storiesOf('ListBox', module)
 
     return (<>
       <ListBox
+        placeholder={'search the star wars universe'}
         textKey='name'
         valueKey='name'
         defaultInputValue={state.inputValue}
         defaultSelectedItem={state.selectedItem}
         options={state.options}
-        onFetch={fetchPeople}
+        onFetch={fetchJediOrSith}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
         }}
@@ -75,18 +84,19 @@ storiesOf('ListBox', module)
    .add('Remote auto-select', () =>  {
 
     const [state, setState] = useState({
-      inputValue: 'luke skywalker',
+      inputValue: 'rick',
       selectedItem: null,
       options: []
     });
 
     return (<>
       <ListBox
+        placeholder={'pickle rick?'}
         textKey='name'
-        valueKey='name'
+        valueKey='id'
         defaultInputValue={state.inputValue}
         defaultSelectedItem={state.selectedItem}
-        onFetch={fetchPeople}
+        onFetch={fetchRick}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
         }}
