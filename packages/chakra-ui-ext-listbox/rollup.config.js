@@ -19,18 +19,15 @@ const config = {
     '@chakra-ui/core',
     'react',
     'react-dom',
+    'downshift'
   ],
   plugins: [
-    babel({ exclude: 'node_modules/**' }),
     localResolve(),
     resolve(),
     commonjs({
-      include: 'node_modules/**',
-      // left-hand side can be an absolute path, a path
-      // relative to the current directory, or the name
-      // of a module in node_modules
+      include: '../../node_modules/**', // FYI aoa gotcha
       namedExports: {
-        'node_modules/react/index.js': [
+        'react': [
           'cloneElement',
           'createContext',
           'Component',
@@ -42,14 +39,15 @@ const config = {
           'forwardRef',
           'useState'
         ],
-        'node_modules/react-dom/index.js': ['render', 'hydrate'],
-        'node_modules/react-is/index.js': [
+        'react-dom': ['render', 'hydrate'],
+        'react-is': [
           'isElement',
           'isValidElementType',
           'isForwardRef'
         ]
       }
     }),
+    babel({ exclude: '**/node_modules/**' }),
     filesize(),
   ],
 };

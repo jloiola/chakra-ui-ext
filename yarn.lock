@@ -931,7 +931,7 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@chakra-ui/core@0.5.2":
+"@chakra-ui/core@0.5.2", "@chakra-ui/core@^0.5.2":
   version "0.5.2"
   resolved "https://registry.yarnpkg.com/@chakra-ui/core/-/core-0.5.2.tgz#0aa9c059467e7e957098bc07561ed86d80025b0b"
   integrity sha512-0JL7QDp/fr7xcR9vNS6L3N4MluajboLWdnBeN3xK1Cn2ysTBR++ihew4C6vUm8RTTltxmYLP9t6ccuHDxaOxcQ==

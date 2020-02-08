@@ -5,6 +5,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@chakra-ui/core": "^0.5.2",
     "chakra-ui-ext-listbox": "*"
   },
   "devDependencies": {

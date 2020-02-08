@@ -6,14 +6,13 @@
   "module": "build/index.esm.js",
   "browser": "build/index.js",
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "watch": "rollup -c -w"
   },
   "author": "",
   "license": "ISC",
   "peerDependencies": {
-    "@chakra-ui/core": ">= 0.5.2"
-  },
-  "dependencies": {
+    "@chakra-ui/core": ">= 0.5.2",
     "downshift": ">= 4.0.2"
   },
   "devDependencies": {
@@ -22,6 +21,7 @@
     "@babel/preset-env": "7.8.3",
     "@babel/preset-react": "7.8.3",
     "@chakra-ui/core": "0.5.2",
+    "downshift": ">= 4.0.2",
     "babel-loader": "8.0.6",
     "babel-preset-minify": "0.5.1",
     "http-server": "0.12.1",
