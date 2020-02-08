@@ -37,8 +37,8 @@ storiesOf('ListBox', module)
           defaultInputValue={state.inputValue}
           defaultSelectedItem={state.selectedItem}
           options={state.options}
-          onChange={({selectedItem, inputValue}) => (
-            setState((state) => ({...state, selectedItem, inputValue}))
+          onChange={(selectedItem) => (
+            setState((state) => ({...state, selectedItem}))
           )}
         />
         <div>
