@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import { storiesOf } from '@storybook/react';
-import ListBox from 'chakra-ui-ext-listbox';
+import {ComboBox} from 'chakra-ui-ext';
 
 const fetchJediOrSith = (search='') => {
   return fetch(`https://swapi.co/api/people/?search=${search}`)
@@ -17,9 +17,9 @@ const fetchRick = (search='') => {
 };
 
 
-storiesOf('ListBox', module)
+storiesOf('ComboBox', module)
   .addParameters({
-    component: ListBox
+    component: ComboBox
   })
   .add('Basic', () =>  {
 
@@ -33,7 +33,7 @@ storiesOf('ListBox', module)
     });
 
     return (<>
-        <ListBox
+        <ComboBox
           defaultInputValue={state.inputValue}
           defaultSelectedItem={state.selectedItem}
           options={state.options}
@@ -47,8 +47,37 @@ storiesOf('ListBox', module)
           </pre>
         </div>
       </>
-    );
+    );  
   })
+  .add('Basic w/create', () =>  {
+
+    const [state, setState] = useState({
+      inputValue: '2',
+      selectedItem: null,
+      options: [
+        {text: 'test item 1', value: 1},
+        {text: 'test item 2', value: 2},
+      ],
+    });
+
+    return (<>
+        <ComboBox
+          defaultInputValue={state.inputValue}
+          defaultSelectedItem={state.selectedItem}
+          options={state.options}
+          allowCreate={true}
+          onChange={(selectedItem) => (
+            setState((state) => ({...state, selectedItem}))
+          )}
+        />
+        <div>
+          <pre>
+            selected: {JSON.stringify(state.selectedItem, null, 2)}
+          </pre>
+        </div>
+      </>
+    );  
+  })  
    .add('Remote', () =>  {
 
     const [state, setState] = useState({
@@ -58,7 +87,7 @@ storiesOf('ListBox', module)
     });
 
     return (<>
-      <ListBox
+      <ComboBox
         placeholder={'search the star wars universe'}
         textKey='name'
         valueKey='name'
@@ -81,16 +110,16 @@ storiesOf('ListBox', module)
       </div>
     </>);
   })
-   .add('Remote auto-select', () =>  {
+   .add('Remote w/auto-select', () =>  {
 
     const [state, setState] = useState({
-      inputValue: 'rick',
+      inputValue: 'Rick sanchez',
       selectedItem: null,
       options: []
     });
 
     return (<>
-      <ListBox
+      <ComboBox
         placeholder={'pickle rick?'}
         textKey='name'
         valueKey='id'
@@ -107,4 +136,32 @@ storiesOf('ListBox', module)
         </pre>
       </div>
     </>);
-  });   
+  })
+   .add('Remote w/create', () =>  {
+
+    const [state, setState] = useState({
+      inputValue: 'rick',
+      selectedItem: null,
+      options: []
+    });
+
+    return (<>
+      <ComboBox
+        placeholder={'pickle rick?'}
+        allowCreate={true}
+        textKey='name'
+        valueKey='id'
+        defaultInputValue={state.inputValue}
+        defaultSelectedItem={state.selectedItem}
+        onFetch={fetchRick}
+        onChange={(selectedItem) => {
+          setState({...state, selectedItem})
+        }}
+      />
+      <div>
+        <pre>
+          selected: {JSON.stringify(state.selectedItem, null, 2)}
+        </pre>
+      </div>
+    </>);
+  });     

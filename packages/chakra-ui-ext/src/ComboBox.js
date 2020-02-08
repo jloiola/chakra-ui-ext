@@ -2,7 +2,7 @@ import React, {useState, useEffect, useRef, forwardRef} from 'react';
 import {useCombobox} from 'downshift';
 import {useDebouncedCallback} from 'use-debounce';
 
-import { Spinner, Input, InputGroup, InputRightElement, Icon, useTheme, Box } from '@chakra-ui/core';
+import {Tooltip, Spinner, Input, InputGroup, InputRightElement, Icon, useTheme, Box } from '@chakra-ui/core';
 import {useCombinedRefs} from './combined-refs';
 
 const stateReducer = (state, {changes, props, type}) => {
@@ -25,28 +25,31 @@ const stateReducer = (state, {changes, props, type}) => {
   }
 };
 
-const ListBox = forwardRef(({
+const ComboBox = forwardRef(({
   defaultInputValue='',
   defaultSelectedItem=null,
   valueKey='value',
   textKey='text',
+  createdKey='isCreated',
   placeholder,
   focusBorderColor,
   errorBorderColor,
   isInvalid,
   options=[],
   onFetch,
+  allowCreate=false,
   onFocus=() => {},
   onBlur=() => {},
   onInput=()=>{},
   onChange=() => {},
+  createRender=(item) => (<div>Create `{item[textKey]}`</div>),
   itemRender=(item) => (<div>{item[textKey]}</div>),
   debounceMs=333,
   ...rest
 }, ref) => {
 
   const hasValue = (selectedItem) => (
-    selectedItem && selectedItem[valueKey] !== undefined 
+    selectedItem && (selectedItem[valueKey] !== undefined || selectedItem[createdKey])
   );
 
   const showMenu = (isOpen, isLoading, items) => (
@@ -57,6 +60,7 @@ const ListBox = forwardRef(({
     await remoteData(onFetch, inputValue)
   }, debounceMs);
 
+  const [previousInputValue, setPreviousInputValue] = useState('');
   const [isLoading, setLoading] = useState(false);
   const [items, setItems] = useState(options);
 
@@ -105,9 +109,29 @@ const ListBox = forwardRef(({
     initialInputValue: defaultInputValue,
     itemToString: getSelectedText,
     onInputValueChange: async ({inputValue, selectedItem}) => {
-      if(onFetch && !selectedItem) {
+
+      if(inputValue.trim() === previousInputValue.trim()) {
+        return;
+      }
+
+      setPreviousInputValue(inputValue)
+
+      if(!inputValue.trim()) {
+        setInputValue('');
+        setItems(options);
+      }
+
+      if(onFetch && !selectedItem && inputValue.trim()) {
         debouncedCallback(inputValue)
       }
+
+      if(!onFetch && allowCreate && inputValue.trim() && !selectedItem) {
+        setItems([
+          {[createdKey]: true, [textKey]: inputValue, [valueKey]: undefined },
+          ...options,
+        ])
+      }
+
       onInput(inputValue)
     },
     onSelectedItemChange: ({selectedItem}) => {
@@ -117,17 +141,30 @@ const ListBox = forwardRef(({
 
   const remoteData = async (fetchFunction, inputValue) => {
     try {
-      setLoading(true)
+      setLoading(true);
+
       const items = await fetchFunction(inputValue);
       const found = items.find((item) => {
         return (item[textKey].toLowerCase() === inputValue.toLowerCase()) ||
           (selectedItem && selectedItem[valueKey].toString() === item[valueKey].toString());
       })
+
+      if(allowCreate && !found) {
+        items.unshift({
+          [createdKey]: true,
+          [textKey]: inputValue,
+        });
+      }
+
       setItems(items)
+
       if(found) {
         selectItem(found)
         setInputValue(found[textKey])
       }
+      
+      setPreviousInputValue(inputValue)
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -137,10 +174,16 @@ const ListBox = forwardRef(({
 
   useEffect(() => {
     (async () => {
-      if(onFetch) {
+      if(onFetch && inputValue.trim()) {
         await remoteData(onFetch, inputValue)
       }
-    })()
+    })();
+    if(!onFetch && allowCreate && inputValue.trim() && !selectedItem) {
+      setItems([
+        {[createdKey]: true, [textKey]: inputValue, [valueKey]: undefined },
+        ...options,
+      ])
+    }
   }, []);
 
   const {inputRef, ...inputProps} = getInputProps({
@@ -179,6 +222,17 @@ const ListBox = forwardRef(({
             marginRight: '0.25rem'
           }}
         >
+          {hasValue(selectedItem) && !isLoading && selectedItem[createdKey] && (
+            <Box
+              w={'1.5rem'}
+              fontSize={'0.75rem'}
+            >
+              <Tooltip zIndex={2000} hasArrow label={`${inputValue} will be created`} placement='bottom'>
+                <Icon name='add' color='green.500' />
+              </Tooltip>
+            </Box>
+          )}
+          
           {hasValue(selectedItem) && !isLoading && (
             <Box
               w={'1.25rem'}
@@ -186,10 +240,11 @@ const ListBox = forwardRef(({
               onClick={()=> {
                 selectItem(null);
                 setInputValue('');
+                setItems(options);
                 combinedRef.current.focus()
               }}
-            >
-              <Icon name='close' />
+              >
+                <Icon name='close' />
             </Box>
           )}
 
@@ -249,7 +304,7 @@ const ListBox = forwardRef(({
               {...getItemProps({item, index})}
             >
               {
-                itemRender(item)
+                item[createdKey] === true ? createRender(item) : itemRender(item)
               }
             </div>
           ))}
@@ -259,6 +314,6 @@ const ListBox = forwardRef(({
   );
 });
 
-export default ListBox;
+export default ComboBox;
 
 
