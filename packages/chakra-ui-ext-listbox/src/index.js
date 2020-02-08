@@ -32,16 +32,16 @@ const stateReducer = (state, {changes, props, type}) => {
 
 const ListBox = forwardRef(({
   mode='string', //mode='object',
-  defaultInputValue,
-  defaultSelectedItem,
+  defaultInputValue='',
+  defaultSelectedItem=null,
   valueKey='value',
   textKey='text',
   placeholder,
   focusBorderColor,
   errorBorderColor,
   isInvalid,
-  isLoading,
-  items=[],
+  options=[],
+  onFetch,
   onFocus=() => {},
   onBlur=() => {},
   onInput=()=>{},
@@ -56,6 +56,9 @@ const ListBox = forwardRef(({
   const showMenu = (isOpen, isLoading, items) => (
     isOpen && !isLoading && items && items.length > 0
   )
+
+  const [isLoading, setLoading] = useState(false);
+  const [items, setItems] = useState(options);
 
   const getSelectedText = (item) => {
     if(!item) {
@@ -93,6 +96,7 @@ const ListBox = forwardRef(({
     setInputValue,
     selectItem,
     selectedItem,
+    setHighlightedIndex,
     highlightedIndex,
   } = useCombobox({
     stateReducer,
@@ -100,18 +104,38 @@ const ListBox = forwardRef(({
     initialSelectedItem: defaultSelectedItem,
     initialInputValue: defaultInputValue,
     itemToString: getSelectedText,
-    onStateChange: (x,y) => {
-      console.log(x,y,'onStateChange')
+    onInputValueChange: async ({inputValue}) => {
+      if(onFetch) {
+        await remoteData(onFetch, inputValue)
+      }
+      onInput(inputValue)
     },
-    onInputValueChange: (changes,b) => {
-      onInput(changes,b)
-      console.log(changes,b, "onInputValueChange")
-    },
-    onSelectedItemChange: (changes,b) => {
-      onChange(changes,b)
-      console.log(changes,b, "onSelectedItemChange")
+    onSelectedItemChange: ({selectedItem}) => {
+      onChange(selectedItem);
     },
   });
+
+  const remoteData = async (fetchFunction, inputValue) => {
+    try {
+      setLoading(true)
+      const items = await fetchFunction(inputValue);
+      const found = items.find((item) => item[textKey].toLowerCase() === inputValue.toLowerCase())
+      setItems(items)
+      selectItem(found)
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false)
+    }
+  };  
+
+  useEffect(() => {
+    (async () => {
+      if(onFetch) {
+        await remoteData(onFetch, inputValue)
+      }
+    })()
+  }, [])
 
   return (
     <Box w='100%' position='relative' backgroundColor='white' {...rest}>
