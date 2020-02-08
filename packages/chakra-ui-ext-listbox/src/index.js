@@ -20,9 +20,6 @@ const stateReducer = (state, {changes, props, type}) => {
       })
 
       return {...changes, highlightedIndex};
-    // disable Esc by passing the current state aka no changes
-    case useCombobox.stateChangeTypes.InputKeyDownEscape:
-      return {...state, isOpen: false}
     default:
       return changes
   }
