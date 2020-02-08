@@ -18,8 +18,7 @@ const config = {
   external: [
     '@chakra-ui/core',
     'react',
-    'react-dom',
-    'downshift'
+    'react-dom'
   ],
   plugins: [
     localResolve(),

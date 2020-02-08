@@ -37,7 +37,8 @@ const ComboBox = forwardRef(({
   placeholder,
   focusBorderColor,
   errorBorderColor,
-  isInvalid,
+  isInvalid=false,
+  isDisabled=false,
   options=[],
   onFetch,
   allowCreate=false,
@@ -218,6 +219,7 @@ const ComboBox = forwardRef(({
           ref={combinedRef}
           {...inputProps}
           placeholder={placeholder}
+          isDisabled={isDisabled}
           style={{
             flex: 1,
             transition: 'none',
