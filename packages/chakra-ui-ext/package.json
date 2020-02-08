@@ -10,7 +10,7 @@
     "watch": "rollup -c -w"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "peerDependencies": {
     "@chakra-ui/core": ">= 0.5.2",
     "downshift": ">= 4.0.2"
@@ -35,5 +35,9 @@
   },
   "dependencies": {
     "use-debounce": "^3.3.0"
-  }
+  },
+  "keywords": "",
+  "homepage": "",
+  "bugs": "",
+  "repository": ""
 }
