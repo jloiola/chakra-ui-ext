@@ -16,10 +16,13 @@ const stateReducer = (state, {changes, props, type}) => {
       // eslint-disable-next-line no-case-declarations
       const highlightedIndex = props.items.findIndex((item) => {
         const realText = props.itemToString(item);
-        return realText && realText.toLowerCase().startsWith(changes.inputValue.toLowerCase());
+        return realText && realText.toString().toLowerCase().startsWith(changes.inputValue.toLowerCase());
       })
 
       return {...changes, highlightedIndex};
+    // disable Esc by passing the current state aka no changes
+    case useCombobox.stateChangeTypes.InputKeyDownEscape:
+      return {...state, isOpen: false}      
     default:
       return changes
   }
@@ -60,6 +63,7 @@ const ComboBox = forwardRef(({
     await remoteData(onFetch, inputValue)
   }, debounceMs);
 
+  const [tryAutoSelect, setAutoSelect] = useState(false);
   const [previousInputValue, setPreviousInputValue] = useState('');
   const [isLoading, setLoading] = useState(false);
   const [items, setItems] = useState(options);
@@ -114,7 +118,9 @@ const ComboBox = forwardRef(({
         return;
       }
 
-      setPreviousInputValue(inputValue)
+      if(selectedItem && selectedItem[textKey] !== inputValue) {
+        setPreviousInputValue(inputValue);
+      }
 
       if(!inputValue.trim()) {
         setInputValue('');
@@ -158,7 +164,7 @@ const ComboBox = forwardRef(({
 
       setItems(items)
 
-      if(found) {
+      if(found && tryAutoSelect) {
         selectItem(found)
         setInputValue(found[textKey])
       }
@@ -175,7 +181,8 @@ const ComboBox = forwardRef(({
   useEffect(() => {
     (async () => {
       if(onFetch && inputValue.trim()) {
-        await remoteData(onFetch, inputValue)
+        await remoteData(onFetch, inputValue);
+        setAutoSelect(false);
       }
     })();
     if(!onFetch && allowCreate && inputValue.trim() && !selectedItem) {
@@ -192,7 +199,13 @@ const ComboBox = forwardRef(({
       onFocus();
     },
     onClick: () => {
-      !hasValue(selectedItem) && openMenu();
+      openMenu();
+    },
+    onKeyDown: (e,b) => {
+      if(e.nativeEvent.code === 'Backspace' && hasValue(selectedItem)) {
+        selectItem(null);
+      }
+      return true;
     },
   });
 
@@ -212,43 +225,30 @@ const ComboBox = forwardRef(({
               `${theme.sizes['1']} ${theme.sizes['1']} 0 0` :
               `${theme.sizes['1']}`,
           }}
-          readOnly={hasValue(selectedItem)}
         />
 
         <InputRightElement
           style={{
             justifyContent: 'flex-end',
-            width: '3.5rem',
             marginRight: '0.25rem'
           }}
         >
-          {hasValue(selectedItem) && !isLoading && selectedItem[createdKey] && (
-            <Box
-              w={'1.5rem'}
-              fontSize={'0.75rem'}
-            >
-              <Tooltip zIndex={2000} hasArrow label={`${inputValue} will be created`} placement='bottom'>
-                <Icon name='add' color='green.500' />
-              </Tooltip>
-            </Box>
-          )}
-          
           {hasValue(selectedItem) && !isLoading && (
             <Box
               w={'1.25rem'}
               fontSize={'0.625rem'}
               onClick={()=> {
+                setInputValue(previousInputValue)
                 selectItem(null);
-                setInputValue('');
-                setItems(options);
-                combinedRef.current.focus()
+                openMenu();
+                inputRef.current.focus()
               }}
               >
                 <Icon name='close' />
             </Box>
           )}
 
-          {!hasValue(selectedItem) && !isLoading && (
+          {!isLoading && (
             <Box
               w={'1.5rem'}
               fontSize={'1.25rem'}

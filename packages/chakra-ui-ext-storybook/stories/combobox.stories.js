@@ -16,7 +16,6 @@ const fetchRick = (search='') => {
     .catch(err => []);
 };
 
-
 storiesOf('ComboBox', module)
   .addParameters({
     component: ComboBox
