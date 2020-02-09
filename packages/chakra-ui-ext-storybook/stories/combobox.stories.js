@@ -122,12 +122,12 @@ storiesOf('ComboBox', module)
 
     const [state, setState] = useState({
       inputValue: 'skywalker',
-      selectedItem: null,
-      options: []
+      selectedItem: null
     });
 
     return (<>
       <ComboBox
+        filterType='contains'
         placeholder={'search the star wars universe'}
         textKey='name'
         valueKey='name'
@@ -204,7 +204,6 @@ storiesOf('ComboBox', module)
     const [state, setState] = useState({
       inputValue: 'sanchez',
       selectedItem: null,
-      options: []
     });
 
     return (<>

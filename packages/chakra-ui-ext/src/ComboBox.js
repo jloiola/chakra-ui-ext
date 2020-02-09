@@ -7,7 +7,7 @@ import {useCombinedRefs} from './combined-refs';
 
 const ComboBox = forwardRef(({
   optionsMode='object',
-  matchFilter='startsWith',
+  filterType='startsWith',
   initialText='',
   initialValue=null,
   valueKey='value',
@@ -74,7 +74,7 @@ const ComboBox = forwardRef(({
             return (item === undefined || item === null) ? null : item;
           },
           getSelectedText: (item) => {
-            return (item === undefined || item === null) ? '' : item[textKey].toString();
+            return !(item && item[textKey]) ? '' : item[textKey].toString();
           },
           matchers: {
             exact: (item, inputValue) => (
@@ -93,24 +93,26 @@ const ComboBox = forwardRef(({
   };  
 
   const {hasValue, isSelected, isNewValue, getSelectedText, getSelectedItem, matchers} = modeSelect(optionsMode);
-  const filterMatcher = typeof matchFilter === 'function' ? matchFilter : matchers[matchFilter];
+  const filterMatcher = typeof filterType === 'function' ? filterType : matchers[filterType];
 
   const stateReducer = (state, {changes, props, type}) => {
     switch (type) {
+      case useCombobox.stateChangeTypes.InputKeyDownEnter:
       case useCombobox.stateChangeTypes.FunctionSelectItem:
       case useCombobox.stateChangeTypes.ItemClick:
-        console.log(state, {changes, props, type})
-        return {...changes, inputValue: getSelectedText(changes.selectedItem)};
+        console.log(state, changes, props, type)
+        const text = getSelectedText(changes.selectedItem);
+        const inputValue = text ? text : changes.inputValue;
+        return {...changes, inputValue};
       case useCombobox.stateChangeTypes.InputChange:
       case useCombobox.stateChangeTypes.FunctionSetInputValue:
         console.log(state, {changes, props, type})
-        // eslint-disable-next-line no-case-declarations
-        const highlightedIndex = props.items.findIndex((item) => filterMatcher(item, changes.inputValue));
-        const selectedItem = highlightedIndex >= 0 ? null : changes.selectedItem;
+        const highlightedIndex = props.items.findIndex((item) => (filterMatcher(item, changes.inputValue)));
+        const selectedItem = highlightedIndex >= 0 ? props.items[highlightedIndex] : null;
         return {...changes, highlightedIndex, selectedItem};
       // disable Esc by passing the current state aka no changes
       case useCombobox.stateChangeTypes.InputKeyDownEscape:
-        return {...state, isOpen: false}      
+        return {...state, isOpen: false};
       default:
         return changes
     }
@@ -209,9 +211,12 @@ const ComboBox = forwardRef(({
   };  
 
   useEffect(() => {
+    if(initialText.trim()) {
+
+    }
     (async () => {
-      if(remoteOptions && inputValue.trim()) {
-        await remoteData(remoteOptions, inputValue);
+      if(remoteOptions && initialText.trim()) {
+        await remoteData(remoteOptions, initialText);
         setAutoSelect(false);
       }
     })();
