@@ -1,31 +1,9 @@
 import React, {useState, useEffect} from 'react';
 import { storiesOf } from '@storybook/react';
+import { fetchJediOrSith, fetchRick, dogData} from '../data';
+
 import {ComboBox} from 'chakra-ui-ext';
-
-const fetchJediOrSith = (search='') => {
-  return fetch(`https://swapi.co/api/people/?search=${search}`)
-    .then(res => res.json())
-    .then(({results}) => results)
-    .catch(err => console.error(err))
-};
-
-const fetchRick = (search='') => {
-  return fetch(`https://rickandmortyapi.com/api/character/?name=${search}`)
-    .then(res => res.json())
-    .then(({results}) => results)
-    .catch(err => []);
-};
-
-const dogs = [
-  "American Cocker Spaniel", "American Water Spaniel", "Blue Picardy Spaniel",
-  "Boykin Spaniel", "Cavalier King Charles Spaniel", "Clumber Spaniel", "Drentse Patrijshond",
-  "English Cocker Spaniel", "English Springer Spaniel", "Field Spaniel", "German Spaniel",
-  "Irish Water Spaniel", "King Charles Spaniel", "Kooikerhondje", "Markiesje", "Papillon", 
-  "Phalène", "Picardy Spaniel", "Pont-Audemer Spaniel", "Russian Spaniel", "Stabyhoun",
-  "Sussex Spaniel", "Welsh Springer Spaniel", "Alpine Spaniel", "English Water Spaniel",
-  "Norfolk Spaniel", "Toy Trawler Spaniel", "Tweed Water Spaniel", "Japanese Chin", "Pekingese",
-  "Tibetan Spaniel",
-];
+import {Flex, Image, Box, Text, Stack} from '@chakra-ui/core'
 
 storiesOf('ComboBox', module)
   .addParameters({
@@ -36,7 +14,7 @@ storiesOf('ComboBox', module)
     const [state, setState] = useState({
       inputValue: '',
       selectedItem: null,
-      options: dogs.map(d => ({text: d, value: d})),
+      options: dogData.map((dog,i) => ({text: dog, value: i})),
     });
 
     return (<>
@@ -44,13 +22,13 @@ storiesOf('ComboBox', module)
           defaultInputValue={state.inputValue}
           defaultSelectedItem={state.selectedItem}
           options={state.options}
-          onChange={(selectedItem) => (
+          onChange={(selectedItem) => {
             setState((state) => ({...state, selectedItem}))
-          )}
+          }}
         />
         <div>
           <pre>
-            selected: {JSON.stringify(state.selectedItem, null, 2)}
+            {JSON.stringify(state.selectedItem, null, 2)}
           </pre>
         </div>
       </>
@@ -61,7 +39,7 @@ storiesOf('ComboBox', module)
     const [state, setState] = useState({
       inputValue: '',
       selectedItem: null,
-      options: dogs.map(d => ({text: d, value: d})),
+      options: dogData.map((dog,i) => ({text: dog, value: i})),
     });
 
     return (<>
@@ -70,13 +48,13 @@ storiesOf('ComboBox', module)
           defaultSelectedItem={state.selectedItem}
           options={state.options}
           allowCreate={true}
-          onChange={(selectedItem) => (
+          onChange={(selectedItem) => {
             setState((state) => ({...state, selectedItem}))
-          )}
+          }}
         />
         <div>
           <pre>
-            selected: {JSON.stringify(state.selectedItem, null, 2)}
+            {JSON.stringify(state.selectedItem, null, 2)}
           </pre>
         </div>
       </>
@@ -109,7 +87,7 @@ storiesOf('ComboBox', module)
       />
       <div>
         <pre>
-          selected: {JSON.stringify(state.selectedItem, null, 2)}
+          {JSON.stringify(state.selectedItem, null, 2)}
         </pre>
       </div>
     </>);
@@ -136,7 +114,7 @@ storiesOf('ComboBox', module)
       />
       <div>
         <pre>
-          selected: {JSON.stringify(state.selectedItem, null, 2)}
+          {JSON.stringify(state.selectedItem, null, 2)}
         </pre>
       </div>
     </>);
@@ -164,8 +142,55 @@ storiesOf('ComboBox', module)
       />
       <div>
         <pre>
-          selected: {JSON.stringify(state.selectedItem, null, 2)}
+          {JSON.stringify(state.selectedItem, null, 2)}
         </pre>
       </div>
     </>);
-  });     
+  })
+   .add('Remote w/custom render', () =>  {
+
+    const [state, setState] = useState({
+      inputValue: 'sanchez',
+      selectedItem: null,
+      options: []
+    });
+
+    return (<>
+      <ComboBox
+        placeholder={'pickle rick?'}
+        textKey='name'
+        valueKey='id'
+        defaultInputValue={state.inputValue}
+        defaultSelectedItem={state.selectedItem}
+        onFetch={fetchRick}
+        onChange={(selectedItem) => {
+          setState({...state, selectedItem})
+        }}
+        itemRender={(item, {isHighlighted}) => (
+          <Flex direction='center' align='center' bg={isHighlighted && 'black'} color={isHighlighted && 'white'}>
+            <Box p={'0.25rem'}>
+              <Image
+                border='1px'
+                borderColor='gray.300'
+                src={item.image}
+                htmlWidth={40}
+                htmlHeight={40}
+                h={'40px'}
+                objectFit='contain'
+                bg={'gray.300'}
+              />
+            </Box>
+            <Box flex={1} p={'0.25rem'}>
+              {item.name}<br/>
+              {item.status}<br/>
+            </Box>
+          </Flex>
+        )}
+      />
+      <div>
+        <pre>
+          {JSON.stringify(state.selectedItem, null, 2)}
+        </pre>
+      </div>
+    </>);
+  });  

@@ -243,7 +243,7 @@ const ComboBox = forwardRef(({
                 setInputValue(previousInputValue)
                 selectItem(null);
                 openMenu();
-                inputRef.current.focus()
+                inputRef.current && inputRef.current.focus()
               }}
               >
                 <Icon name='close' />
@@ -294,7 +294,6 @@ const ComboBox = forwardRef(({
             <div
               key={index}
               style={Object.assign({
-                  padding: '0.5rem',
                 },
                 highlightedIndex === index ? {backgroundColor: theme.colors.blue['50'], opacity: 0.8} : {},
                 selectedItem && ((valueKey && selectedItem[valueKey] === item[valueKey]) ||  selectedItem === item)? {
@@ -306,7 +305,9 @@ const ComboBox = forwardRef(({
               {...getItemProps({item, index})}
             >
               {
-                item[createdKey] === true ? createRender(item) : itemRender(item)
+                item[createdKey] === true ?
+                  createRender(item, {isHighlighted: highlightedIndex === index}) :
+                  itemRender(item, {isHighlighted: highlightedIndex === index})
               }
             </div>
           ))}
