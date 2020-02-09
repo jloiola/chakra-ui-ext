@@ -100,15 +100,12 @@ const ComboBox = forwardRef(({
       case useCombobox.stateChangeTypes.InputKeyDownEnter:
       case useCombobox.stateChangeTypes.FunctionSelectItem:
       case useCombobox.stateChangeTypes.ItemClick:
-        console.log(state, changes, props, type)
         const text = getSelectedText(changes.selectedItem);
         const inputValue = text ? text : changes.inputValue;
         return {...changes, inputValue};
       case useCombobox.stateChangeTypes.InputChange:
       case useCombobox.stateChangeTypes.FunctionSetInputValue:
-        console.log(state, {changes, props, type})
         const highlightedIndex = props.items.findIndex((item) => (filterMatcher(item, changes.inputValue)));
-        console.log(highlightedIndex, 'highlightedIndex', filterMatcher)
         const selectedItem =  getSelectedText(changes.selectedItem) !== inputValue ? null : changes.selectedItem;
         return {...changes, highlightedIndex, selectedItem};
       // disable Esc by passing the current state aka no changes
