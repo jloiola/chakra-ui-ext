@@ -7098,6 +7098,11 @@ lru-cache@^5.1.1:
   dependencies:
     yallist "^3.0.2"
 
+luxon@^1.22.0:
+  version "1.22.0"
+  resolved "https://registry.yarnpkg.com/luxon/-/luxon-1.22.0.tgz#639525c7c69e594953c7b142794466b8ea85b868"
+  integrity sha512-3sLvlfbFo+AxVEY3IqxymbumtnlgBwjDExxK60W3d+trrUzErNAz/PfvPT+mva+vEUrdIodeCOs7fB6zHtRSrw==
+
 magic-string@^0.25.2:
   version "0.25.6"
   resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.25.6.tgz#5586387d1242f919c6d223579cc938bf1420795e"
@@ -8902,6 +8907,11 @@ react-helmet-async@^1.0.2:
     prop-types "^15.7.2"
     react-fast-compare "^2.0.4"
     shallowequal "^1.1.0"
+
+react-hook-form@^4.9.2:
+  version "4.9.2"
+  resolved "https://registry.yarnpkg.com/react-hook-form/-/react-hook-form-4.9.2.tgz#756c44d19fb3cf851ed89b6a06680056a64404ae"
+  integrity sha512-XJ6AAkYwN807R8TBsYevrrTuen1lpo9u9lf9Yibr/E0/yL4uQieqXrG1mzCkit4xujapr86jfSEMbkVjKKt+Aw==
 
 react-hotkeys@2.0.0:
   version "2.0.0"

@@ -1,4 +1,4 @@
-
+import { Info } from 'luxon';
 
 export const fetchJediOrSith = (search='') => {
   return fetch(`https://swapi.co/api/people/?search=${search}`)
@@ -24,3 +24,16 @@ export const dogData = [
   "Norfolk Spaniel", "Toy Trawler Spaniel", "Tweed Water Spaniel", "Japanese Chin", "Pekingese",
   "Tibetan Spaniel",
 ];
+
+export const years = () => {
+  const options = [];
+  const currentYear = new Date().getFullYear();
+  for (let i = currentYear; i >= currentYear - 90; i--) {
+    options.push(i);
+  }
+  return options;
+};
+
+export const months = Info.months('short').map((month, i) => (
+  {value: parseInt(Info.months('numeric')[i]), text: month}
+));

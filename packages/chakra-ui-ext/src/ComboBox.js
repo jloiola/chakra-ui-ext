@@ -2,35 +2,14 @@ import React, {useState, useEffect, useRef, forwardRef} from 'react';
 import {useCombobox} from 'downshift';
 import {useDebouncedCallback} from 'use-debounce';
 
-import {Tooltip, Spinner, Input, InputGroup, InputRightElement, Icon, useTheme, Box } from '@chakra-ui/core';
+import {Spinner, Input, InputGroup, InputRightElement, Icon, useTheme, Box } from '@chakra-ui/core';
 import {useCombinedRefs} from './combined-refs';
 
-const stateReducer = (state, {changes, props, type}) => {
-  switch (type) {
-    case useCombobox.stateChangeTypes.FunctionSelectItem:
-    case useCombobox.stateChangeTypes.InputChange:
-      if(!changes.inputValue) {
-        return changes;
-      }
-
-      // eslint-disable-next-line no-case-declarations
-      const highlightedIndex = props.items.findIndex((item) => {
-        const realText = props.itemToString(item);
-        return realText && realText.toString().toLowerCase().startsWith(changes.inputValue.toLowerCase());
-      })
-
-      return {...changes, highlightedIndex};
-    // disable Esc by passing the current state aka no changes
-    case useCombobox.stateChangeTypes.InputKeyDownEscape:
-      return {...state, isOpen: false}      
-    default:
-      return changes
-  }
-};
-
 const ComboBox = forwardRef(({
-  defaultInputValue='',
-  defaultSelectedItem=null,
+  optionsMode='object',
+  initialText='',
+  initialValue=null,
+  value,
   valueKey='value',
   textKey='text',
   createdKey='isCreated',
@@ -40,42 +19,100 @@ const ComboBox = forwardRef(({
   isInvalid=false,
   isDisabled=false,
   options=[],
-  onFetch,
+  remoteOptions,
   allowCreate=false,
   onFocus=() => {},
   onBlur=() => {},
   onInput=()=>{},
   onChange=() => {},
-  createRender=(item) => (<div style={{padding: '0.5rem'}}>Create `{item[textKey]}`</div>),
-  itemRender=(item) => (<div style={{padding: '0.5rem'}}>{item[textKey]}</div>),
+  createRender=(item) => (<div style={{padding: '0.5rem'}}>Create `{item[textKey] || item}`</div>),
+  itemRender=(item) => (<div style={{padding: '0.5rem'}}>{item[textKey] || item}</div>),
   debounceMs=333,
+  matchFilter='startsWith', //startsWith|contains
   ...rest
 }, ref) => {
 
-  const hasValue = (selectedItem) => (
-    selectedItem && (selectedItem[valueKey] !== undefined || selectedItem[createdKey])
-  );
+  const modeSelect = (mode) => {
+    switch (mode) {
+      case 'primitive':
+        return {
+          isNewValue: (selectedItem, {items}) => {
+            return items.find(item => selectItem === item) === null;
+          }, 
+          hasValue: (selectedItem) => (selectedItem !== undefined),
+          getSelectedText: (item) => {
+            return (item === undefined || item === null) ? '' : item.toString();
+          },
+          matchers: {
+            exact: (item, inputValue) => (
+              item.toString().toLowerCase() === inputValue.toLowerCase()
+            ),            
+            contains: (item, inputValue) => (
+              item.toString().toLowerCase().indexOf(inputValue.toLowerCase()) >= 0
+            ),
+            startsWith: (item, inputValue) => (
+              item.toString().toLowerCase().indexOf(inputValue.toLowerCase()) === 0
+            )
+          },
+        };
+      break;
+      case 'object':
+      default:
+        return {
+          isNewValue: (selectedItem, {createdKey}) => (selectedItem && selectedItem[createdKey]), 
+          hasValue: (selectedItem) => (
+            selectedItem && ((selectedItem[valueKey] !== undefined && selectedItem[valueKey] !== null) 
+            || selectedItem[createdKey])
+          ),
+          getSelectedText: (item) => {
+            return (item === undefined || item === null) ? '' : [textKey].toString();
+          },
+          matchers: {
+            exact: (item, inputValue) => (
+              item && item[textKey].toString().toLowerCase() === inputValue.toLowerCase()
+            ),
+            contains: (item, inputValue) => (
+              item && item[textKey].toString().toLowerCase().indexOf(inputValue.toLowerCase()) >= 0
+            ),
+            startsWith: (item, inputValue) => (
+              item && item[textKey].toString().toLowerCase().indexOf(inputValue.toLowerCase()) === 0
+            )
+          },
+        };
+      break;
+    }
+  };  
+
+  const {hasValue, isNewValue, getSelectedText, matchers} = modeSelect(optionsMode);
+  const filterMatcher = typeof matchFilter === 'function' ? matchFilter : matchers[matchFilter];
+
+  const stateReducer = (state, {changes, props, type}) => {
+    switch (type) {
+      case useCombobox.stateChangeTypes.FunctionSelectItem:
+      case useCombobox.stateChangeTypes.InputChange:
+        // eslint-disable-next-line no-case-declarations
+        const highlightedIndex = props.items.findIndex((item) => filterMatcher(item, changes.inputValue));
+        return {...changes, highlightedIndex};
+      // disable Esc by passing the current state aka no changes
+      case useCombobox.stateChangeTypes.InputKeyDownEscape:
+        return {...state, isOpen: false}      
+      default:
+        return changes
+    }
+  };
 
   const showMenu = (isOpen, isLoading, items) => (
     isOpen && !isLoading && items && items.length > 0
   );
 
   const [debouncedCallback] = useDebouncedCallback(async (inputValue) => {
-    await remoteData(onFetch, inputValue)
+    await remoteData(remoteOptions, inputValue)
   }, debounceMs);
 
   const [tryAutoSelect, setAutoSelect] = useState(false);
   const [previousInputValue, setPreviousInputValue] = useState('');
   const [isLoading, setLoading] = useState(false);
   const [items, setItems] = useState(options);
-
-  const getSelectedText = (item) => {
-    if(!item) {
-      return '';
-    } else {
-      return item[textKey];
-    }
-  };
 
   const theme = useTheme();
   focusBorderColor = focusBorderColor ? focusBorderColor : theme.colors.blue['500'];
@@ -110,29 +147,37 @@ const ComboBox = forwardRef(({
   } = useCombobox({
     stateReducer,
     items,
-    initialSelectedItem: defaultSelectedItem,
-    initialInputValue: defaultInputValue,
-    itemToString: getSelectedText,
+    initialSelectedItem: initialValue,
+    initialInputValue: initialText,
+    itemToString: (item) => {
+      getSelectedText(item)
+    },
     onInputValueChange: async ({inputValue, selectedItem}) => {
 
+      // no operation if the value doesnt change
       if(inputValue.trim() === previousInputValue.trim()) {
         return;
       }
 
+      // ?
       if(selectedItem && selectedItem[textKey] !== inputValue) {
         setPreviousInputValue(inputValue);
+        selectItem(null)
       }
 
+      // reset items to original state; empty in case of remote items
       if(!inputValue.trim()) {
         setInputValue('');
         setItems(options);
       }
 
-      if(onFetch && !selectedItem && inputValue.trim()) {
+      // debounce our remote option fetching
+      if(remoteOptions && !selectedItem && inputValue.trim()) {
         debouncedCallback(inputValue)
       }
 
-      if(!onFetch && allowCreate && inputValue.trim() && !selectedItem) {
+      // create new for local options
+      if(!remoteOptions && allowCreate && inputValue.trim() && !selectedItem) {
         setItems([
           {[createdKey]: true, [textKey]: inputValue, [valueKey]: undefined },
           ...options,
@@ -181,12 +226,12 @@ const ComboBox = forwardRef(({
 
   useEffect(() => {
     (async () => {
-      if(onFetch && inputValue.trim()) {
-        await remoteData(onFetch, inputValue);
+      if(remoteOptions && inputValue.trim()) {
+        await remoteData(remoteOptions, inputValue);
         setAutoSelect(false);
       }
     })();
-    if(!onFetch && allowCreate && inputValue.trim() && !selectedItem) {
+    if(!remoteOptions && allowCreate && inputValue.trim() && !selectedItem) {
       setItems([
         {[createdKey]: true, [textKey]: inputValue, [valueKey]: undefined },
         ...options,
@@ -202,9 +247,9 @@ const ComboBox = forwardRef(({
     onClick: () => {
       openMenu();
     },
-    onKeyDown: (e,b) => {
+    onKeyUp: (e,b) => {
       if(e.nativeEvent.code === 'Backspace' && hasValue(selectedItem)) {
-        selectItem(null);
+        
       }
       return true;
     },
@@ -290,27 +335,29 @@ const ComboBox = forwardRef(({
             borderTop: 'none',
           }}
         >
-          {items.map((item, index) => (   
-            <div
-              key={index}
-              style={Object.assign({
-                },
-                highlightedIndex === index ? {backgroundColor: theme.colors.blue['50'], opacity: 0.8} : {},
-                selectedItem && ((valueKey && selectedItem[valueKey] === item[valueKey]) ||  selectedItem === item)? {
-                  backgroundColor: theme.colors.blue['100'], opacity: 0.8,
-                  borderTop: `1px solid ${theme.colors.blue['200']}`,
-                  borderBottom: `1px solid ${theme.colors.blue['200']}`,
-                } : {},
-              )}
-              {...getItemProps({item, index})}
-            >
-              {
-                item[createdKey] === true ?
-                  createRender(item, {isHighlighted: highlightedIndex === index}) :
-                  itemRender(item, {isHighlighted: highlightedIndex === index})
-              }
-            </div>
-          ))}
+          {items.map((item, index) => {
+            return (
+              <div
+                key={index}
+                style={Object.assign({
+                  },
+                  highlightedIndex === index ? {backgroundColor: theme.colors.blue['50'], opacity: 0.8} : {},
+                  selectedItem && ((valueKey && selectedItem[valueKey] === item[valueKey]) ||  selectedItem === item)? {
+                    backgroundColor: theme.colors.blue['100'], opacity: 0.8,
+                    borderTop: `1px solid ${theme.colors.blue['200']}`,
+                    borderBottom: `1px solid ${theme.colors.blue['200']}`,
+                  } : {},
+                )}
+                {...getItemProps({item, index})}
+              >
+                {
+                  isNewValue(selectedItem, {items, createdKey}) ?
+                    createRender(item, {isHighlighted: highlightedIndex === index}) :
+                    itemRender(item, {isHighlighted: highlightedIndex === index})
+                }
+              </div>
+            );
+          })}
         </div>
       )}
     </Box>

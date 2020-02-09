@@ -1,9 +1,12 @@
 import React, {useState, useEffect} from 'react';
+
 import { storiesOf } from '@storybook/react';
-import { fetchJediOrSith, fetchRick, dogData} from '../data';
+import useForm from 'react-hook-form';
 
 import {ComboBox} from 'chakra-ui-ext';
-import {Flex, Image, Box, Text, Stack} from '@chakra-ui/core'
+import {Flex, Image, Box, Text, Stack} from '@chakra-ui/core';
+
+import { fetchJediOrSith, fetchRick, dogData, years, months} from '../data';
 
 storiesOf('ComboBox', module)
   .addParameters({
@@ -19,9 +22,10 @@ storiesOf('ComboBox', module)
 
     return (<>
         <ComboBox
-          defaultInputValue={state.inputValue}
-          defaultSelectedItem={state.selectedItem}
+          initialText={state.inputValue}
+          initialValue={state.selectedItem}
           options={state.options}
+          filterType='contains'
           onChange={(selectedItem) => {
             setState((state) => ({...state, selectedItem}))
           }}
@@ -34,6 +38,60 @@ storiesOf('ComboBox', module)
       </>
     );  
   })
+  .add('Basic custom matcher', () =>  {
+
+    const [state, setState] = useState({
+      inputValue: '',
+      selectedItem: null,
+      options: months,
+    });
+
+    return (<>
+        <ComboBox
+          initialText={state.inputValue}
+          initialValue={state.selectedItem}
+          options={state.options}
+          matchFilter={(item, inputValue) => (
+            item.text.toLowerCase().indexOf(inputValue.toLowerCase()) >= 0 ||
+            item.value === parseInt(inputValue)
+          )}
+          onChange={(selectedItem) => {
+            setState((state) => ({...state, selectedItem}))
+          }}
+        />
+        <div>
+          <pre>
+            {JSON.stringify(state.selectedItem, null, 2)}
+          </pre>
+        </div>
+      </>
+    );  
+  })
+  .add('Basic primitive options pre-selected', () =>  {
+
+    const [state, setState] = useState({
+      options: years(),
+      selectedItem: 1980,
+    });
+
+    return (<>
+        <ComboBox
+          optionsMode='primitive'
+          filterType='exact'
+          initialValue={state.selectedItem}
+          options={state.options}
+          onChange={(selectedItem) => {
+            setState((state) => ({...state, selectedItem}))
+          }}
+        />
+        <div>
+          <pre>
+            {JSON.stringify(state.selectedItem, null, 2)}
+          </pre>
+        </div>
+      </>
+    );  
+  })  
   .add('Basic w/create', () =>  {
 
     const [state, setState] = useState({
@@ -44,8 +102,8 @@ storiesOf('ComboBox', module)
 
     return (<>
         <ComboBox
-          defaultInputValue={state.inputValue}
-          defaultSelectedItem={state.selectedItem}
+          initialText={state.inputValue}
+          initialValue={state.selectedItem}
           options={state.options}
           allowCreate={true}
           onChange={(selectedItem) => {
@@ -59,7 +117,7 @@ storiesOf('ComboBox', module)
         </div>
       </>
     );  
-  })  
+  })
    .add('Remote', () =>  {
 
     const [state, setState] = useState({
@@ -73,17 +131,12 @@ storiesOf('ComboBox', module)
         placeholder={'search the star wars universe'}
         textKey='name'
         valueKey='name'
-        defaultInputValue={state.inputValue}
-        defaultSelectedItem={state.selectedItem}
-        options={state.options}
-        onFetch={fetchJediOrSith}
+        initialText={state.inputValue}
+        initialValue={state.selectedItem}
+        remoteOptions={fetchJediOrSith}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
         }}
-        onInput={async (inputValue) => {
-          console.log(inputValue)
-        }}
-
       />
       <div>
         <pre>
@@ -97,7 +150,6 @@ storiesOf('ComboBox', module)
     const [state, setState] = useState({
       inputValue: 'Rick sanchez',
       selectedItem: null,
-      options: []
     });
 
     return (<>
@@ -105,9 +157,9 @@ storiesOf('ComboBox', module)
         placeholder={'pickle rick?'}
         textKey='name'
         valueKey='id'
-        defaultInputValue={state.inputValue}
-        defaultSelectedItem={state.selectedItem}
-        onFetch={fetchRick}
+        initialText={state.inputValue}
+        initialValue={state.selectedItem}
+        remoteOptions={fetchRick}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
         }}
@@ -133,9 +185,9 @@ storiesOf('ComboBox', module)
         allowCreate={true}
         textKey='name'
         valueKey='id'
-        defaultInputValue={state.inputValue}
-        defaultSelectedItem={state.selectedItem}
-        onFetch={fetchRick}
+        initialText={state.inputValue}
+        initialValue={state.selectedItem}
+        remoteOptions={fetchRick}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
         }}
@@ -160,9 +212,53 @@ storiesOf('ComboBox', module)
         placeholder={'pickle rick?'}
         textKey='name'
         valueKey='id'
-        defaultInputValue={state.inputValue}
-        defaultSelectedItem={state.selectedItem}
-        onFetch={fetchRick}
+        initialText={state.inputValue}
+        initialValue={state.selectedItem}
+        remoteOptions={fetchRick}
+        onChange={(selectedItem) => {
+          setState({...state, selectedItem})
+        }}
+        itemRender={(item, {isHighlighted}) => (
+          <Flex direction='center' align='center' bg={isHighlighted && 'black'} color={isHighlighted && 'white'}>
+            <Box p={'0.25rem'}>
+              <Image
+                border='1px'
+                borderColor='gray.300'
+                src={item.image}
+                htmlWidth={40}
+                htmlHeight={40}
+                h={'40px'}
+                objectFit='contain'
+                bg={'gray.300'}
+              />
+            </Box>
+            <Box flex={1} p={'0.25rem'}>
+              {item.name}<br/>
+              {item.status}<br/>
+            </Box>
+          </Flex>
+        )}
+      />
+      <div>
+        <pre>
+          {JSON.stringify(state.selectedItem, null, 2)}
+        </pre>
+      </div>
+    </>);
+  })
+   .add('With react hook form', () =>  {
+
+    const [state, setState] = useState({
+      initialValue: 1998,
+      options: years(),
+    });
+
+    return (<>
+      <ComboBox
+        placeholder={'adventure with ricky and morty'}
+        optionsMode='primitive'
+        initialValue={initialValue} 
+        remoteOptions={fetchRick}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
         }}
