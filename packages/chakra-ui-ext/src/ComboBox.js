@@ -48,13 +48,13 @@ const ComboBox = forwardRef(({
           },
           matchers: {
             exact: (item, inputValue) => (
-              item.toString().toLowerCase() === inputValue.toLowerCase()
+              item.toString().toLowerCase() === inputValue.toString().toLowerCase()
             ),            
             contains: (item, inputValue) => (
-              item.toString().toLowerCase().indexOf(inputValue.toLowerCase()) >= 0
+              item.toString().toLowerCase().indexOf(inputValue.toString().toLowerCase()) >= 0
             ),
             startsWith: (item, inputValue) => (
-              item.toString().toLowerCase().indexOf(inputValue.toLowerCase()) === 0
+              item.toString().toLowerCase().indexOf(inputValue.toString().toLowerCase()) === 0
             )
           },
         };
@@ -78,13 +78,13 @@ const ComboBox = forwardRef(({
           },
           matchers: {
             exact: (item, inputValue) => (
-              item && item[textKey].toString().toLowerCase() === inputValue.toLowerCase()
+              item && item[textKey].toString().toLowerCase() === inputValue.toString().toLowerCase()
             ),
             contains: (item, inputValue) => (
-              item && item[textKey].toString().toLowerCase().indexOf(inputValue.toLowerCase()) >= 0
+              item && item[textKey].toString().toLowerCase().indexOf(inputValue.toString().toLowerCase()) >= 0
             ),
             startsWith: (item, inputValue) => (
-              item && item[textKey].toString().toLowerCase().indexOf(inputValue.toLowerCase()) === 0
+              item && item[textKey].toString().toLowerCase().indexOf(inputValue.toString().toLowerCase()) === 0
             )
           },
         };
@@ -108,7 +108,8 @@ const ComboBox = forwardRef(({
       case useCombobox.stateChangeTypes.FunctionSetInputValue:
         console.log(state, {changes, props, type})
         const highlightedIndex = props.items.findIndex((item) => (filterMatcher(item, changes.inputValue)));
-        const selectedItem = highlightedIndex >= 0 ? props.items[highlightedIndex] : null;
+        console.log(highlightedIndex, 'highlightedIndex', filterMatcher)
+        const selectedItem =  getSelectedText(changes.selectedItem) !== inputValue ? null : changes.selectedItem;
         return {...changes, highlightedIndex, selectedItem};
       // disable Esc by passing the current state aka no changes
       case useCombobox.stateChangeTypes.InputKeyDownEscape:
@@ -164,12 +165,13 @@ const ComboBox = forwardRef(({
   } = useCombobox({
     stateReducer,
     items,
-    initialSelectedItem: getSelectedItem(initialValue),
-    initialInputValue: getSelectedText(initialText),
     itemToString: (item) => {
       getSelectedText(item)
     },
     onInputValueChange: ({selectedItem, inputValue}) => {
+      if(remoteOptions && !selectedItem) {
+        debouncedCallback(inputValue.trim())
+      }
       onInput(inputValue)
     },
     onSelectedItemChange: ({selectedItem}) => {
@@ -211,16 +213,17 @@ const ComboBox = forwardRef(({
   };  
 
   useEffect(() => {
-    if(initialText.trim()) {
-
+    
+    if(initialText.toString().trim()) {
+      setInputValue(initialText)
     }
-    (async () => {
-      if(remoteOptions && initialText.trim()) {
-        await remoteData(remoteOptions, initialText);
-        setAutoSelect(false);
-      }
-    })();
-    if(!remoteOptions && allowCreate && inputValue.trim() && !selectedItem) {
+    
+    const selectedItem = getSelectedItem(initialValue);
+    if(selectedItem) {
+      selectItem(selectedItem);
+    }
+     
+    if(!remoteOptions && allowCreate && inputValue.toString().trim() && !selectedItem) {
       setItems([
         {[createdKey]: true, [textKey]: inputValue, [valueKey]: undefined },
         ...options,
@@ -230,18 +233,8 @@ const ComboBox = forwardRef(({
 
   const {inputRef, ...inputProps} = getInputProps({
     refKey: 'inputRef',
-    onFocus: (e) => {
-      onFocus();
-    },
-    onClick: () => {
-      openMenu();
-    },
-    onKeyUp: (e,b) => {
-      if(e.nativeEvent.code === 'Backspace' && hasValue(selectedItem)) {
-        
-      }
-      return true;
-    },
+    onFocus: (e) => { onFocus(); },
+    onClick: () => { openMenu();},
   });
 
   const combinedRef = useCombinedRefs(ref, inputRef);

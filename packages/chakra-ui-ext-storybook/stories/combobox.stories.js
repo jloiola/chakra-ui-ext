@@ -12,7 +12,7 @@ storiesOf('ComboBox', module)
   .addParameters({
     component: ComboBox
   })
-  .add('Basic', () =>  {
+  .add('Basic startsWith match', () =>  {
 
     const [state, setState] = useState({
       inputValue: '',
@@ -38,6 +38,32 @@ storiesOf('ComboBox', module)
       </>
     );  
   })
+   .add('Basic contains match', () =>  {
+
+    const [state, setState] = useState({
+      inputValue: '',
+      selectedItem: null,
+      options: dogData.map((dog,i) => ({text: dog, value: i})),
+    });
+
+    return (<>
+        <ComboBox
+          initialText={state.inputValue}
+          initialValue={state.selectedItem}
+          options={state.options}
+          filterType='contains'
+          onChange={(selectedItem) => {
+            setState((state) => ({...state, selectedItem}))
+          }}
+        />
+        <div>
+          <pre>
+            {JSON.stringify(state.selectedItem, null, 2)}
+          </pre>
+        </div>
+      </>
+    );  
+  }) 
   .add('Basic custom matcher', () =>  {
 
     const [state, setState] = useState({
@@ -51,7 +77,7 @@ storiesOf('ComboBox', module)
           initialText={state.inputValue}
           initialValue={state.selectedItem}
           options={state.options}
-          matchFilter={(item, inputValue) => (
+          filterType={(item, inputValue) => (
             item.text.toLowerCase().indexOf(inputValue.toLowerCase()) >= 0 ||
             item.value === parseInt(inputValue)
           )}
