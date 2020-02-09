@@ -7,9 +7,9 @@ import {useCombinedRefs} from './combined-refs';
 
 const ComboBox = forwardRef(({
   optionsMode='object',
+  matchFilter='startsWith',
   initialText='',
   initialValue=null,
-  value,
   valueKey='value',
   textKey='text',
   createdKey='isCreated',
@@ -28,7 +28,6 @@ const ComboBox = forwardRef(({
   createRender=(item) => (<div style={{padding: '0.5rem'}}>Create `{item[textKey] || item}`</div>),
   itemRender=(item) => (<div style={{padding: '0.5rem'}}>{item[textKey] || item}</div>),
   debounceMs=333,
-  matchFilter='startsWith', //startsWith|contains
   ...rest
 }, ref) => {
 
@@ -37,9 +36,13 @@ const ComboBox = forwardRef(({
       case 'primitive':
         return {
           isNewValue: (selectedItem, {items}) => {
-            return items.find(item => selectItem === item) === null;
+            return items.filter(item => selectItem === item) === null;
           }, 
-          hasValue: (selectedItem) => (selectedItem !== undefined),
+          hasValue: (selectedItem) => (selectedItem !== undefined && selectedItem !== null),
+          isSelected: (item, selectedItem, {valueKey}) => (item === selectedItem),
+          getSelectedItem: (item) => {
+            return (item === undefined || item === null) ? null : item;
+          },
           getSelectedText: (item) => {
             return (item === undefined || item === null) ? '' : item.toString();
           },
@@ -64,8 +67,14 @@ const ComboBox = forwardRef(({
             selectedItem && ((selectedItem[valueKey] !== undefined && selectedItem[valueKey] !== null) 
             || selectedItem[createdKey])
           ),
+          isSelected: (item, selectedItem, {valueKey}) => (
+            selectedItem && (selectedItem[valueKey] === item[valueKey])
+          ),
+          getSelectedItem: (item) => {
+            return (item === undefined || item === null) ? null : item;
+          },
           getSelectedText: (item) => {
-            return (item === undefined || item === null) ? '' : [textKey].toString();
+            return (item === undefined || item === null) ? '' : item[textKey].toString();
           },
           matchers: {
             exact: (item, inputValue) => (
@@ -83,16 +92,22 @@ const ComboBox = forwardRef(({
     }
   };  
 
-  const {hasValue, isNewValue, getSelectedText, matchers} = modeSelect(optionsMode);
+  const {hasValue, isSelected, isNewValue, getSelectedText, getSelectedItem, matchers} = modeSelect(optionsMode);
   const filterMatcher = typeof matchFilter === 'function' ? matchFilter : matchers[matchFilter];
 
   const stateReducer = (state, {changes, props, type}) => {
     switch (type) {
       case useCombobox.stateChangeTypes.FunctionSelectItem:
+      case useCombobox.stateChangeTypes.ItemClick:
+        console.log(state, {changes, props, type})
+        return {...changes, inputValue: getSelectedText(changes.selectedItem)};
       case useCombobox.stateChangeTypes.InputChange:
+      case useCombobox.stateChangeTypes.FunctionSetInputValue:
+        console.log(state, {changes, props, type})
         // eslint-disable-next-line no-case-declarations
         const highlightedIndex = props.items.findIndex((item) => filterMatcher(item, changes.inputValue));
-        return {...changes, highlightedIndex};
+        const selectedItem = highlightedIndex >= 0 ? null : changes.selectedItem;
+        return {...changes, highlightedIndex, selectedItem};
       // disable Esc by passing the current state aka no changes
       case useCombobox.stateChangeTypes.InputKeyDownEscape:
         return {...state, isOpen: false}      
@@ -147,43 +162,12 @@ const ComboBox = forwardRef(({
   } = useCombobox({
     stateReducer,
     items,
-    initialSelectedItem: initialValue,
-    initialInputValue: initialText,
+    initialSelectedItem: getSelectedItem(initialValue),
+    initialInputValue: getSelectedText(initialText),
     itemToString: (item) => {
       getSelectedText(item)
     },
-    onInputValueChange: async ({inputValue, selectedItem}) => {
-
-      // no operation if the value doesnt change
-      if(inputValue.trim() === previousInputValue.trim()) {
-        return;
-      }
-
-      // ?
-      if(selectedItem && selectedItem[textKey] !== inputValue) {
-        setPreviousInputValue(inputValue);
-        selectItem(null)
-      }
-
-      // reset items to original state; empty in case of remote items
-      if(!inputValue.trim()) {
-        setInputValue('');
-        setItems(options);
-      }
-
-      // debounce our remote option fetching
-      if(remoteOptions && !selectedItem && inputValue.trim()) {
-        debouncedCallback(inputValue)
-      }
-
-      // create new for local options
-      if(!remoteOptions && allowCreate && inputValue.trim() && !selectedItem) {
-        setItems([
-          {[createdKey]: true, [textKey]: inputValue, [valueKey]: undefined },
-          ...options,
-        ])
-      }
-
+    onInputValueChange: ({selectedItem, inputValue}) => {
       onInput(inputValue)
     },
     onSelectedItemChange: ({selectedItem}) => {
@@ -285,7 +269,7 @@ const ComboBox = forwardRef(({
               w={'1.25rem'}
               fontSize={'0.625rem'}
               onClick={()=> {
-                setInputValue(previousInputValue)
+                setInputValue('')
                 selectItem(null);
                 openMenu();
                 inputRef.current && inputRef.current.focus()
@@ -342,7 +326,7 @@ const ComboBox = forwardRef(({
                 style={Object.assign({
                   },
                   highlightedIndex === index ? {backgroundColor: theme.colors.blue['50'], opacity: 0.8} : {},
-                  selectedItem && ((valueKey && selectedItem[valueKey] === item[valueKey]) ||  selectedItem === item)? {
+                  isSelected(item, selectedItem, {valueKey}) ? {
                     backgroundColor: theme.colors.blue['100'], opacity: 0.8,
                     borderTop: `1px solid ${theme.colors.blue['200']}`,
                     borderBottom: `1px solid ${theme.colors.blue['200']}`,

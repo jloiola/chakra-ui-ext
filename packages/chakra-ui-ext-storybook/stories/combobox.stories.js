@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect,} from 'react';
 
 import { storiesOf } from '@storybook/react';
 import useForm from 'react-hook-form';
@@ -77,7 +77,7 @@ storiesOf('ComboBox', module)
     return (<>
         <ComboBox
           optionsMode='primitive'
-          filterType='exact'
+          initialText={state.selectedItem}
           initialValue={state.selectedItem}
           options={state.options}
           onChange={(selectedItem) => {
@@ -245,48 +245,4 @@ storiesOf('ComboBox', module)
         </pre>
       </div>
     </>);
-  })
-   .add('With react hook form', () =>  {
-
-    const [state, setState] = useState({
-      initialValue: 1998,
-      options: years(),
-    });
-
-    return (<>
-      <ComboBox
-        placeholder={'adventure with ricky and morty'}
-        optionsMode='primitive'
-        initialValue={initialValue} 
-        remoteOptions={fetchRick}
-        onChange={(selectedItem) => {
-          setState({...state, selectedItem})
-        }}
-        itemRender={(item, {isHighlighted}) => (
-          <Flex direction='center' align='center' bg={isHighlighted && 'black'} color={isHighlighted && 'white'}>
-            <Box p={'0.25rem'}>
-              <Image
-                border='1px'
-                borderColor='gray.300'
-                src={item.image}
-                htmlWidth={40}
-                htmlHeight={40}
-                h={'40px'}
-                objectFit='contain'
-                bg={'gray.300'}
-              />
-            </Box>
-            <Box flex={1} p={'0.25rem'}>
-              {item.name}<br/>
-              {item.status}<br/>
-            </Box>
-          </Flex>
-        )}
-      />
-      <div>
-        <pre>
-          {JSON.stringify(state.selectedItem, null, 2)}
-        </pre>
-      </div>
-    </>);
-  });  
+  });
