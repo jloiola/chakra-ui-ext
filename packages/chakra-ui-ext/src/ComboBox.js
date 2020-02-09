@@ -46,8 +46,8 @@ const ComboBox = forwardRef(({
   onBlur=() => {},
   onInput=()=>{},
   onChange=() => {},
-  createRender=(item) => (<div>Create `{item[textKey]}`</div>),
-  itemRender=(item) => (<div>{item[textKey]}</div>),
+  createRender=(item) => (<div style={{padding: '0.5rem'}}>Create `{item[textKey]}`</div>),
+  itemRender=(item) => (<div style={{padding: '0.5rem'}}>{item[textKey]}</div>),
   debounceMs=333,
   ...rest
 }, ref) => {
