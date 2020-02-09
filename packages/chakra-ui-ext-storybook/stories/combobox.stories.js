@@ -16,6 +16,17 @@ const fetchRick = (search='') => {
     .catch(err => []);
 };
 
+const dogs = [
+  "American Cocker Spaniel", "American Water Spaniel", "Blue Picardy Spaniel",
+  "Boykin Spaniel", "Cavalier King Charles Spaniel", "Clumber Spaniel", "Drentse Patrijshond",
+  "English Cocker Spaniel", "English Springer Spaniel", "Field Spaniel", "German Spaniel",
+  "Irish Water Spaniel", "King Charles Spaniel", "Kooikerhondje", "Markiesje", "Papillon", 
+  "Phalène", "Picardy Spaniel", "Pont-Audemer Spaniel", "Russian Spaniel", "Stabyhoun",
+  "Sussex Spaniel", "Welsh Springer Spaniel", "Alpine Spaniel", "English Water Spaniel",
+  "Norfolk Spaniel", "Toy Trawler Spaniel", "Tweed Water Spaniel", "Japanese Chin", "Pekingese",
+  "Tibetan Spaniel",
+];
+
 storiesOf('ComboBox', module)
   .addParameters({
     component: ComboBox
@@ -23,12 +34,9 @@ storiesOf('ComboBox', module)
   .add('Basic', () =>  {
 
     const [state, setState] = useState({
-      inputValue: '2',
+      inputValue: '',
       selectedItem: null,
-      options: [
-        {text: 'test item 1', value: 1},
-        {text: 'test item 2', value: 2},
-      ],
+      options: dogs.map(d => ({text: d, value: d})),
     });
 
     return (<>
@@ -51,12 +59,9 @@ storiesOf('ComboBox', module)
   .add('Basic w/create', () =>  {
 
     const [state, setState] = useState({
-      inputValue: '2',
+      inputValue: '',
       selectedItem: null,
-      options: [
-        {text: 'test item 1', value: 1},
-        {text: 'test item 2', value: 2},
-      ],
+      options: dogs.map(d => ({text: d, value: d})),
     });
 
     return (<>
