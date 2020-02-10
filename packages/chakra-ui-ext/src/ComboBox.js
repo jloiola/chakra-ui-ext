@@ -84,11 +84,19 @@ const ComboBox = forwardRef(({
             selectedItem && ((selectedItem[valueKey] !== undefined && selectedItem[valueKey] !== null) 
             || selectedItem[createdKey])
           ),
-          findSelected: (items, {selectedItem, valueKey}) => (
-            items.find((item) => (
-              selectedItem && selectedItem[valueKey].toString() === item[valueKey].toString()
-            ))
-          ),
+          findSelected: (items, {inputValue, selectedItem, valueKey, textKey}) => {
+            
+            const valueFound = items.find((item) => {
+              return selectedItem && selectedItem[valueKey].toString() === item[valueKey].toString();
+            });
+
+            const textFound = items.find((item) => {
+              return inputValue
+                && inputValue.toString().toLowerCase().trim() === item[textKey].toString().toLowerCase().trim()
+            });
+
+            return valueFound !== undefined ? valueFound : textFound;
+          },
           isSelected: (item, selectedItem, {valueKey}) => (
             selectedItem && (selectedItem[valueKey] === item[valueKey])
           ),
@@ -158,7 +166,7 @@ const ComboBox = forwardRef(({
   );
 
   const [debouncedCallback] = useDebouncedCallback(async (inputValue) => {
-    await remoteData(remoteOptions, {inputValue, selectedItem})
+    await remoteData(remoteOptions, {inputValue, selectedItem, valueKey, textKey})
   }, debounceMs);
 
   const [tryAutoSelect, setAutoSelect] = useState(autoSelect);
@@ -204,7 +212,6 @@ const ComboBox = forwardRef(({
     },
     onInputValueChange: ({selectedItem, inputValue}) => {
       const item = getSelectedItem(selectedItem);
-
       // fetch remote data on input change
       if(remoteOptions && !item) {
         debouncedCallback(inputValue.trim())
@@ -227,12 +234,12 @@ const ComboBox = forwardRef(({
     },
   });
 
-  const remoteData = async (fetchFunction, {inputValue, selectedItem}) => {
+  const remoteData = async (fetchFunction, {inputValue, selectedItem, valueKey, textKey}) => {
     try {
       setLoading(true);
 
       const items = await fetchFunction(inputValue);
-      const found = findSelected(items, {inputValue, selectedItem})
+      const found = findSelected(items, {selectedItem, inputValue, valueKey, textKey})
 
       if(allowCreate && !found && inputValue.toString().trim()) {
         items.unshift({
@@ -242,10 +249,10 @@ const ComboBox = forwardRef(({
       }
 
       setItems(items)
-      
-      if(found && tryAutoSelect) {
-        selectItem(found)
-        setInputValue(found[textKey])
+
+      if(tryAutoSelect) {
+        setAutoSelect(false);
+        selectItem(found);
       }
       
       setPreviousInputValue(inputValue)

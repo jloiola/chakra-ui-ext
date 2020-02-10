@@ -255,7 +255,7 @@ storiesOf('ComboBox', module)
    .add('Remote w/auto-select', () =>  {
 
     const [state, setState] = useState({
-      inputValue: 'Rick sanchez',
+      inputValue: 'Accountant dog',
       selectedItem: null,
     });
 
@@ -267,6 +267,7 @@ storiesOf('ComboBox', module)
         initialText={state.inputValue}
         initialValue={state.selectedItem}
         remoteOptions={fetchRick}
+        autoSelect={true}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
         }}
@@ -278,6 +279,33 @@ storiesOf('ComboBox', module)
       </div>
     </>);
   })
+   .add('Remote w/o auto-select', () =>  {
+
+    const [state, setState] = useState({
+      inputValue: 'Accountant dog',
+      selectedItem: null,
+    });
+
+    return (<>
+      <ComboBox
+        placeholder={'pickle rick?'}
+        textKey='name'
+        valueKey='id'
+        initialText={state.inputValue}
+        initialValue={state.selectedItem}
+        remoteOptions={fetchRick}
+        autoSelect={false}
+        onChange={(selectedItem) => {
+          setState({...state, selectedItem})
+        }}
+      />
+      <div>
+        <pre>
+          {JSON.stringify(state.selectedItem, null, 2)}
+        </pre>
+      </div>
+    </>);
+  })  
    .add('Remote w/create', () =>  {
 
     const [state, setState] = useState({
