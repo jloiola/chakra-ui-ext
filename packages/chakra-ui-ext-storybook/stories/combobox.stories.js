@@ -145,7 +145,7 @@ storiesOf('ComboBox', module)
       </>
     );  
   })   
-  .add('Basic custom matcher', () =>  {
+  .add('Basic custom matcher & column display', () =>  {
 
     const [state, setState] = useState({
       selectedItem: {text: 'May', value: 5},
