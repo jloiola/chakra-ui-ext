@@ -217,7 +217,7 @@ const ComboBox = forwardRef(({
 
       // the item is was selected remove the create option
       if(item && !isCreatedValue(item, {items, createdKey})) {
-        if(allowCreate && items[0][createdKey]) {
+        if(allowCreate && items.length && items[0][createdKey]) {
           items.shift();
         }
       }
@@ -392,7 +392,7 @@ const ComboBox = forwardRef(({
                   } : {},
                 )}
                 {...getItemProps({item, index})}
-              >
+              >     
                 {
                   isCreatedValue(item, {items, createdKey}) ?
                     createRender(item, {textKey, isHighlighted, columns}) :
