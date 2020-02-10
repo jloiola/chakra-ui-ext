@@ -271,7 +271,9 @@ const ComboBox = forwardRef(({
     if(selectedItem) {
       const text = getSelectedText(selectedItem);
       setInputValue(text);
-      selectItem(selectedItem);
+      if(hasValue(selectedItem)) {
+        selectItem(selectedItem);
+      }
     } else if(initialText && initialText.toString().trim()) {
       setInputValue(initialText)
     }
