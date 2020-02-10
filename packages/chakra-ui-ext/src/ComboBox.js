@@ -21,6 +21,7 @@ const ComboBox = forwardRef(({
   options=[],
   remoteOptions,
   allowCreate=false,
+  autoSelect=false,
   onFocus=() => {},
   onBlur=() => {},
   onInput=()=>{},
@@ -160,7 +161,7 @@ const ComboBox = forwardRef(({
     await remoteData(remoteOptions, {inputValue, selectedItem})
   }, debounceMs);
 
-  const [tryAutoSelect, setAutoSelect] = useState(false);
+  const [tryAutoSelect, setAutoSelect] = useState(autoSelect);
   const [previousInputValue, setPreviousInputValue] = useState('');
   const [isLoading, setLoading] = useState(false);
   const [items, setItems] = useState(options);
