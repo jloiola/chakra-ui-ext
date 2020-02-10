@@ -25,7 +25,7 @@ storiesOf('ComboBox', module)
           initialText={state.inputValue}
           initialValue={state.selectedItem}
           options={state.options}
-          filterType='contains'
+          itemFilter='contains'
           onChange={(selectedItem) => {
             setState((state) => ({...state, selectedItem}))
           }}
@@ -51,7 +51,7 @@ storiesOf('ComboBox', module)
           initialText={state.inputValue}
           initialValue={state.selectedItem}
           options={state.options}
-          filterType='contains'
+          itemFilter='contains'
           onChange={(selectedItem) => {
             setState((state) => ({...state, selectedItem}))
           }}
@@ -67,23 +67,22 @@ storiesOf('ComboBox', module)
   .add('Basic custom matcher', () =>  {
 
     const [state, setState] = useState({
-      inputValue: '',
-      selectedItem: null,
+      selectedItem: {text: 'May', value: 5},
       options: months,
     });
 
     return (<>
         <ComboBox
-          initialText={state.inputValue}
           initialValue={state.selectedItem}
           options={state.options}
-          filterType={(item, inputValue) => (
+          itemFilter={(item, inputValue) => (
             item.text.toLowerCase().indexOf(inputValue.toLowerCase()) >= 0 ||
             item.value === parseInt(inputValue)
           )}
           onChange={(selectedItem) => {
             setState((state) => ({...state, selectedItem}))
           }}
+          columns={3}
         />
         <div>
           <pre>
@@ -103,12 +102,12 @@ storiesOf('ComboBox', module)
     return (<>
         <ComboBox
           optionsMode='primitive'
-          initialText={state.selectedItem}
           initialValue={state.selectedItem}
           options={state.options}
           onChange={(selectedItem) => {
             setState((state) => ({...state, selectedItem}))
           }}
+          columns={5}
         />
         <div>
           <pre>
@@ -153,7 +152,7 @@ storiesOf('ComboBox', module)
 
     return (<>
       <ComboBox
-        filterType='contains'
+        itemFilter='contains'
         placeholder={'search the star wars universe'}
         textKey='name'
         valueKey='name'

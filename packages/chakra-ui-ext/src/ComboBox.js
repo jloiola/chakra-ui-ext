@@ -7,7 +7,7 @@ import {useCombinedRefs} from './combined-refs';
 
 const ComboBox = forwardRef(({
   optionsMode='object',
-  filterType='startsWith',
+  itemFilter='startsWith',
   initialText='',
   initialValue=null,
   valueKey='value',
@@ -25,9 +25,10 @@ const ComboBox = forwardRef(({
   onBlur=() => {},
   onInput=()=>{},
   onChange=() => {},
-  createRender=(item) => (<div style={{padding: '0.5rem'}}>Create `{item[textKey] || item}`</div>),
-  itemRender=(item) => (<div style={{padding: '0.5rem'}}>{item[textKey] || item}</div>),
+  createRender=(item, {isHighlighted, columns}) => (<div style={{padding: '0.5rem'}}>Create `{item[textKey] || item}`</div>),
+  itemRender=(item, {isHighlighted, columns}) => (<div style={{padding: '0.5rem', textAlign: columns > 1 && 'center'}}>{item[textKey] || item}</div>),
   debounceMs=333,
+  columns=1,
   ...rest
 }, ref) => {
 
@@ -93,7 +94,7 @@ const ComboBox = forwardRef(({
   };  
 
   const {hasValue, isSelected, isNewValue, getSelectedText, getSelectedItem, matchers} = modeSelect(optionsMode);
-  const filterMatcher = typeof filterType === 'function' ? filterType : matchers[filterType];
+  const filterMatcher = typeof itemFilter === 'function' ? itemFilter : matchers[itemFilter];
 
   const stateReducer = (state, {changes, props, type}) => {
     switch (type) {
@@ -210,14 +211,15 @@ const ComboBox = forwardRef(({
   };  
 
   useEffect(() => {
-    
-    if(initialText.toString().trim()) {
-      setInputValue(initialText)
-    }
-    
+
     const selectedItem = getSelectedItem(initialValue);
+    
     if(selectedItem) {
+      const text = getSelectedText(selectedItem);
+      setInputValue(text);
       selectItem(selectedItem);
+    } else if(initialText && initialText.toString().trim()) {
+      setInputValue(initialText)
     }
      
     if(!remoteOptions && allowCreate && inputValue.toString().trim() && !selectedItem) {
@@ -233,8 +235,9 @@ const ComboBox = forwardRef(({
     onFocus: (e) => { onFocus(); },
     onClick: () => { openMenu();},
   });
-
+  
   const combinedRef = useCombinedRefs(ref, inputRef);
+  console.log(ref, inputRef, combinedRef, 'refs')
 
   return (
     <Box w='100%' position='relative' backgroundColor='white' {...rest}>
@@ -319,6 +322,10 @@ const ComboBox = forwardRef(({
               <div
                 key={index}
                 style={Object.assign({
+                    width: `${1 / (columns * 1.0) * 100}%`,
+                    display: 'inline-flex',
+                    alignItems: columns === 1 ? 'flex-start' : 'center',
+                    justifyContent: columns === 1 ? 'flex-start' : 'center',
                   },
                   highlightedIndex === index ? {backgroundColor: theme.colors.blue['50'], opacity: 0.8} : {},
                   isSelected(item, selectedItem, {valueKey}) ? {
@@ -331,8 +338,8 @@ const ComboBox = forwardRef(({
               >
                 {
                   isNewValue(selectedItem, {items, createdKey}) ?
-                    createRender(item, {isHighlighted: highlightedIndex === index}) :
-                    itemRender(item, {isHighlighted: highlightedIndex === index})
+                    createRender(item, {isHighlighted: highlightedIndex === index, columns}) :
+                    itemRender(item, {isHighlighted: highlightedIndex === index, columns})
                 }
               </div>
             );
