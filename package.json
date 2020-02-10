@@ -7,7 +7,7 @@
   "bugs": "",
   "repository": "",
   "private": true,
-  "version": "0.2.14",
+  "version": "0.2.15",
   "workspaces": [
     "packages/*"
   ],
