@@ -129,7 +129,7 @@ const ComboBox = forwardRef(({
   } = modeSelect(optionsMode);
 
   itemRender = itemRender ? itemRender : renderers.item;
-  createRender = createRender ? createRender : renderers.createRender;
+  createRender = createRender ? createRender : renderers.create;
 
   const filterMatcher = typeof itemFilter === 'function' ? itemFilter : matchers[itemFilter];
 
