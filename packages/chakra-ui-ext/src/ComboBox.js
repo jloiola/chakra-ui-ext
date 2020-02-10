@@ -203,12 +203,25 @@ const ComboBox = forwardRef(({
     },
     onInputValueChange: ({selectedItem, inputValue}) => {
       const item = getSelectedItem(selectedItem);
+
+      // fetch remote data on input change
       if(remoteOptions && !item) {
         debouncedCallback(inputValue.trim())
       }
+
       onInput(inputValue)
     },
     onSelectedItemChange: ({selectedItem}) => {
+
+      const item = getSelectedItem(selectedItem);
+
+      // the item is was selected remove the create option
+      if(item && !isCreatedValue(item, {items, createdKey})) {
+        if(allowCreate && items[0][createdKey]) {
+          items.shift();
+        }
+      }
+      
       onChange(selectedItem);
     },
   });
