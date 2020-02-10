@@ -63,7 +63,88 @@ storiesOf('ComboBox', module)
         </div>
       </>
     );  
+  })
+   .add('Basic disabled w/o value', () =>  {
+
+    const [state, setState] = useState({
+      inputValue: '',
+      selectedItem: null,
+      options: dogData.map((dog,i) => ({text: dog, value: i})),
+    });
+
+    return (<>
+        <ComboBox
+          isDisabled={true}
+          initialText={state.inputValue}
+          initialValue={state.selectedItem}
+          options={state.options}
+          itemFilter='startsWith'
+          onChange={(selectedItem) => {
+            setState((state) => ({...state, selectedItem}))
+          }}
+        />
+        <div>
+          <pre>
+            {JSON.stringify(state.selectedItem, null, 2)}
+          </pre>
+        </div>
+      </>
+    );  
   }) 
+  .add('Basic disabled w/text', () =>  {
+
+    const [state, setState] = useState({
+      inputValue: 'Norfolk Spaniel',
+      selectedItem: null,
+      options: dogData.map((dog,i) => ({text: dog, value: i})),
+    });
+
+    return (<>
+        <ComboBox
+          isDisabled={true}
+          initialText={state.inputValue}
+          initialValue={state.selectedItem}
+          options={state.options}
+          itemFilter='startsWith'
+          onChange={(selectedItem) => {
+            setState((state) => ({...state, selectedItem}))
+          }}
+        />
+        <div>
+          <pre>
+            {JSON.stringify(state.selectedItem, null, 2)}
+          </pre>
+        </div>
+      </>
+    );  
+  }) 
+  .add('Basic disabled w/value', () =>  {
+
+    const [state, setState] = useState({
+      inputValue: '',
+      selectedItem: {value: 1, text: 'American Water Spaniel'},
+      options: dogData.map((dog,i) => ({text: dog, value: i})),
+    });
+
+    return (<>
+        <ComboBox
+          isDisabled={true}
+          initialText={state.inputValue}
+          initialValue={state.selectedItem}
+          options={state.options}
+          itemFilter='startsWith'
+          onChange={(selectedItem) => {
+            setState((state) => ({...state, selectedItem}))
+          }}
+        />
+        <div>
+          <pre>
+            {JSON.stringify(state.selectedItem, null, 2)}
+          </pre>
+        </div>
+      </>
+    );  
+  })   
   .add('Basic custom matcher', () =>  {
 
     const [state, setState] = useState({

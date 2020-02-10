@@ -298,7 +298,10 @@ const ComboBox = forwardRef(({
             <Box
               w={'1.25rem'}
               fontSize={'0.625rem'}
-              onClick={()=> {
+              onClick={(e)=> {
+                if(isDisabled) {
+                  return;
+                }
                 setInputValue('')
                 selectItem(null);
                 openMenu();
@@ -313,7 +316,15 @@ const ComboBox = forwardRef(({
             <Box
               w={'1.5rem'}
               fontSize={'1.25rem'}
-              {...getToggleButtonProps()}
+              {...getToggleButtonProps({
+                onClick: (e) => {
+                  if(isDisabled) {
+                    // todo blur the caret focus
+                    e.nativeEvent.preventDownshiftDefault = true
+                    return;
+                  }
+                }
+              })}
             >
               <Icon name='chevron-down' />
             </Box>
