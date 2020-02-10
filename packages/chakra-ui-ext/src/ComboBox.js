@@ -68,8 +68,7 @@ const ComboBox = forwardRef(({
               <div style={{padding: '0.5rem', textAlign: columns > 1 && 'center'}}>{item}</div>
             ),
             create: (item, {isHighlighted, columns}) => (
-              <div style={{padding: '0.5rem'}}>
-              {item}`</div>
+              <div style={{padding: '0.5rem'}}>{item}</div>
             ),
           }
         };
@@ -114,8 +113,7 @@ const ComboBox = forwardRef(({
               <div style={{padding: '0.5rem', textAlign: columns > 1 && 'center'}}>{item[textKey]}</div>
             ),
             create: (item, {isHighlighted, columns, textKey}) => (
-              <div style={{padding: '0.5rem'}}>
-              {item[textKey]}`</div>
+              <div style={{padding: '0.5rem'}}>{item[textKey]}</div>
             ),
           }          
         };
