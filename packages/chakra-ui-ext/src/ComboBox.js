@@ -228,8 +228,7 @@ const ComboBox = forwardRef(({
       }
 
       setItems(items)
-      console.log(items.length)
-
+      
       if(found && tryAutoSelect) {
         selectItem(found)
         setInputValue(found[textKey])
@@ -352,7 +351,6 @@ const ComboBox = forwardRef(({
         >
           {items.map((item, index) => {
             const isHighlighted = highlightedIndex === index;
-            console.log(item, index, isCreatedValue(item, {items, createdKey}), isHighlighted)
             return (
               <div
                 key={index}
