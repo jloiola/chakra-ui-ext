@@ -224,6 +224,34 @@ storiesOf('ComboBox', module)
       </div>
     </>);
   })
+   .add('Remote w/create with iniitial text', () =>  {
+
+    const [state, setState] = useState({
+      inputValue: 'rick chez',
+      selectedItem: null,
+      options: []
+    });
+
+    return (<>
+      <ComboBox
+        placeholder={'pickle rick?'}
+        allowCreate={true}
+        textKey='name'
+        valueKey='id'
+        initialText={state.inputValue}
+        initialValue={state.selectedItem}
+        remoteOptions={fetchRick}
+        onChange={(selectedItem) => {
+          setState({...state, selectedItem})
+        }}
+      />
+      <div>
+        <pre>
+          {JSON.stringify(state.selectedItem, null, 2)}
+        </pre>
+      </div>
+    </>);
+  })  
    .add('Remote w/custom render', () =>  {
 
     const [state, setState] = useState({
@@ -243,7 +271,7 @@ storiesOf('ComboBox', module)
           setState({...state, selectedItem})
         }}
         itemRender={(item, {isHighlighted}) => (
-          <Flex direction='center' align='center' bg={isHighlighted && 'black'} color={isHighlighted && 'white'}>
+          <Flex flex={1} direction='center' align='center' bg={isHighlighted && 'black'} color={isHighlighted && 'white'}>
             <Box p={'0.25rem'}>
               <Image
                 border='1px'
@@ -269,4 +297,51 @@ storiesOf('ComboBox', module)
         </pre>
       </div>
     </>);
-  });
+  })
+   .add('Remote w/custom render & allow create', () =>  {
+
+    const [state, setState] = useState({
+      inputValue: 'sanchez',
+      selectedItem: null,
+    });
+
+    return (<>
+      <ComboBox
+        placeholder={'pickle rick?'}
+        allowCreate={true}
+        textKey='name'
+        valueKey='id'
+        initialText={state.inputValue}
+        initialValue={state.selectedItem}
+        remoteOptions={fetchRick}
+        onChange={(selectedItem) => {
+          setState({...state, selectedItem})
+        }}
+        itemRender={(item, {isHighlighted}) => (
+          <Flex flex={1} direction='center' align='center' bg={isHighlighted && 'black'} color={isHighlighted && 'white'}>
+            <Box p={'0.25rem'}>
+              <Image
+                border='1px'
+                borderColor='gray.300'
+                src={item.image}
+                htmlWidth={40}
+                htmlHeight={40}
+                h={'40px'}
+                objectFit='contain'
+                bg={'gray.300'}
+              />
+            </Box>
+            <Box flex={1} p={'0.25rem'}>
+              {item.name}<br/>
+              {item.status}<br/>
+            </Box>
+          </Flex>
+        )}
+      />
+      <div>
+        <pre>
+          {JSON.stringify(state.selectedItem, null, 2)}
+        </pre>
+      </div>
+    </>);
+  });  

@@ -25,8 +25,8 @@ const ComboBox = forwardRef(({
   onBlur=() => {},
   onInput=()=>{},
   onChange=() => {},
-  createRender=(item, {isHighlighted, columns}) => (<div style={{padding: '0.5rem'}}>Create `{item[textKey] || item}`</div>),
-  itemRender=(item, {isHighlighted, columns}) => (<div style={{padding: '0.5rem', textAlign: columns > 1 && 'center'}}>{item[textKey] || item}</div>),
+  createRender,
+  itemRender,
   debounceMs=333,
   columns=1,
   ...rest
@@ -36,10 +36,15 @@ const ComboBox = forwardRef(({
     switch (mode) {
       case 'primitive':
         return {
-          isNewValue: (selectedItem, {items}) => {
-            return items.filter(item => selectItem === item) === null;
-          }, 
+          isCreatedValue: (selectedItem, {items}) => {
+            return selectedItem && !items.find(item => selectItem === item);
+          },
           hasValue: (selectedItem) => (selectedItem !== undefined && selectedItem !== null),
+          findSelected: (items, {inputValue}) => (
+            items.find((item) => (
+              inputValue && inputValue.toString().trim() === item.toString().trim()
+            ))
+          ),
           isSelected: (item, selectedItem, {valueKey}) => (item === selectedItem),
           getSelectedItem: (item) => {
             return (item === undefined || item === null) ? null : item;
@@ -58,15 +63,31 @@ const ComboBox = forwardRef(({
               item.toString().toLowerCase().indexOf(inputValue.toString().toLowerCase()) === 0
             )
           },
+          renderers: {
+            item: (item, {isHighlighted, columns}) => (
+              <div style={{padding: '0.5rem', textAlign: columns > 1 && 'center'}}>{item}</div>
+            ),
+            create: (item, {isHighlighted, columns}) => (
+              <div style={{padding: '0.5rem'}}>
+              {item}`</div>
+            ),
+          }
         };
       break;
       case 'object':
       default:
         return {
-          isNewValue: (selectedItem, {createdKey}) => (selectedItem && selectedItem[createdKey]), 
+          isCreatedValue: (item, {createdKey}) => {
+            return item && item[createdKey]
+          }, 
           hasValue: (selectedItem) => (
             selectedItem && ((selectedItem[valueKey] !== undefined && selectedItem[valueKey] !== null) 
             || selectedItem[createdKey])
+          ),
+          findSelected: (items, {selectedItem, valueKey}) => (
+            items.find((item) => (
+              selectedItem && selectedItem[valueKey].toString() === item[valueKey].toString()
+            ))
           ),
           isSelected: (item, selectedItem, {valueKey}) => (
             selectedItem && (selectedItem[valueKey] === item[valueKey])
@@ -88,12 +109,26 @@ const ComboBox = forwardRef(({
               item && item[textKey].toString().toLowerCase().indexOf(inputValue.toString().toLowerCase()) === 0
             )
           },
+          renderers: {
+            item: (item, {isHighlighted, columns, textKey}) => (
+              <div style={{padding: '0.5rem', textAlign: columns > 1 && 'center'}}>{item[textKey]}</div>
+            ),
+            create: (item, {isHighlighted, columns, textKey}) => (
+              <div style={{padding: '0.5rem'}}>
+              {item[textKey]}`</div>
+            ),
+          }          
         };
       break;
     }
   };  
 
-  const {hasValue, isSelected, isNewValue, getSelectedText, getSelectedItem, matchers} = modeSelect(optionsMode);
+  const {
+    hasValue, findSelected, isSelected, isCreatedValue,
+    getSelectedText, getSelectedItem, matchers, renderers
+  } = modeSelect(optionsMode);
+  itemRender = itemRender ? itemRender : renderers.item;
+  createRender = createRender ? createRender : renderers.item;
   const filterMatcher = typeof itemFilter === 'function' ? itemFilter : matchers[itemFilter];
 
   const stateReducer = (state, {changes, props, type}) => {
@@ -122,7 +157,7 @@ const ComboBox = forwardRef(({
   );
 
   const [debouncedCallback] = useDebouncedCallback(async (inputValue) => {
-    await remoteData(remoteOptions, inputValue)
+    await remoteData(remoteOptions, {inputValue, selectedItem})
   }, debounceMs);
 
   const [tryAutoSelect, setAutoSelect] = useState(false);
@@ -167,7 +202,8 @@ const ComboBox = forwardRef(({
       getSelectedText(item)
     },
     onInputValueChange: ({selectedItem, inputValue}) => {
-      if(remoteOptions && !selectedItem) {
+      const item = getSelectedItem(selectedItem);
+      if(remoteOptions && !item) {
         debouncedCallback(inputValue.trim())
       }
       onInput(inputValue)
@@ -177,17 +213,14 @@ const ComboBox = forwardRef(({
     },
   });
 
-  const remoteData = async (fetchFunction, inputValue) => {
+  const remoteData = async (fetchFunction, {inputValue, selectedItem}) => {
     try {
       setLoading(true);
 
       const items = await fetchFunction(inputValue);
-      const found = items.find((item) => {
-        return (item[textKey].toLowerCase() === inputValue.toLowerCase()) ||
-          (selectedItem && selectedItem[valueKey].toString() === item[valueKey].toString());
-      })
+      const found = findSelected(items, {inputValue, selectedItem})
 
-      if(allowCreate && !found) {
+      if(allowCreate && !found && inputValue.toString().trim()) {
         items.unshift({
           [createdKey]: true,
           [textKey]: inputValue,
@@ -195,6 +228,7 @@ const ComboBox = forwardRef(({
       }
 
       setItems(items)
+      console.log(items.length)
 
       if(found && tryAutoSelect) {
         selectItem(found)
@@ -222,7 +256,7 @@ const ComboBox = forwardRef(({
       setInputValue(initialText)
     }
      
-    if(!remoteOptions && allowCreate && inputValue.toString().trim() && !selectedItem) {
+    if(!remoteOptions && allowCreate && initialText && initialText.toString().trim() && !selectedItem) {
       setItems([
         {[createdKey]: true, [textKey]: inputValue, [valueKey]: undefined },
         ...options,
@@ -237,7 +271,6 @@ const ComboBox = forwardRef(({
   });
   
   const combinedRef = useCombinedRefs(ref, inputRef);
-  console.log(ref, inputRef, combinedRef, 'refs')
 
   return (
     <Box w='100%' position='relative' backgroundColor='white' {...rest}>
@@ -318,16 +351,18 @@ const ComboBox = forwardRef(({
           }}
         >
           {items.map((item, index) => {
+            const isHighlighted = highlightedIndex === index;
+            console.log(item, index, isCreatedValue(item, {items, createdKey}), isHighlighted)
             return (
               <div
                 key={index}
                 style={Object.assign({
                     width: `${1 / (columns * 1.0) * 100}%`,
-                    display: 'inline-flex',
+                    display: columns === 1  ? 'flex' : 'inline-flex',
                     alignItems: columns === 1 ? 'flex-start' : 'center',
                     justifyContent: columns === 1 ? 'flex-start' : 'center',
                   },
-                  highlightedIndex === index ? {backgroundColor: theme.colors.blue['50'], opacity: 0.8} : {},
+                  isHighlighted ? {backgroundColor: theme.colors.blue['50'], opacity: 0.8} : {},
                   isSelected(item, selectedItem, {valueKey}) ? {
                     backgroundColor: theme.colors.blue['100'], opacity: 0.8,
                     borderTop: `1px solid ${theme.colors.blue['200']}`,
@@ -337,9 +372,9 @@ const ComboBox = forwardRef(({
                 {...getItemProps({item, index})}
               >
                 {
-                  isNewValue(selectedItem, {items, createdKey}) ?
-                    createRender(item, {isHighlighted: highlightedIndex === index, columns}) :
-                    itemRender(item, {isHighlighted: highlightedIndex === index, columns})
+                  isCreatedValue(item, {items, createdKey}) ?
+                    createRender(item, {textKey, isHighlighted, columns}) :
+                    itemRender(item, {textKey, isHighlighted, columns})
                 }
               </div>
             );

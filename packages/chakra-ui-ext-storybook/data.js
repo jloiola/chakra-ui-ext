@@ -10,8 +10,8 @@ export const fetchJediOrSith = (search='') => {
 export const fetchRick = (search='') => {
   return fetch(`https://rickandmortyapi.com/api/character/?name=${search}`)
     .then(res => res.json())
-    .then(({results}) => results)
-    .catch(err => []);
+    .then(({results, error}) => error ? [] : results)
+    .catch(err => console.error(err));
 };
 
 export const dogData = [
