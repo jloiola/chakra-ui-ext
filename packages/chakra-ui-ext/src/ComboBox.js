@@ -78,7 +78,7 @@ const ComboBox = forwardRef(({
       default:
         return {
           isCreatedValue: (item, {createdKey}) => {
-            return item && item[createdKey]
+            return item && item[createdKey] === true;
           }, 
           hasValue: (selectedItem) => (
             selectedItem && ((selectedItem[valueKey] !== undefined && selectedItem[valueKey] !== null) 
@@ -127,8 +127,10 @@ const ComboBox = forwardRef(({
     hasValue, findSelected, isSelected, isCreatedValue,
     getSelectedText, getSelectedItem, matchers, renderers
   } = modeSelect(optionsMode);
+
   itemRender = itemRender ? itemRender : renderers.item;
-  createRender = createRender ? createRender : renderers.item;
+  createRender = createRender ? createRender : renderers.createRender;
+
   const filterMatcher = typeof itemFilter === 'function' ? itemFilter : matchers[itemFilter];
 
   const stateReducer = (state, {changes, props, type}) => {
