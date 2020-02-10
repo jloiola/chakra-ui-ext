@@ -25,7 +25,7 @@ storiesOf('ComboBox', module)
           initialText={state.inputValue}
           initialValue={state.selectedItem}
           options={state.options}
-          itemFilter='contains'
+          itemFilter='startsWith'
           onChange={(selectedItem) => {
             setState((state) => ({...state, selectedItem}))
           }}
@@ -73,6 +73,7 @@ storiesOf('ComboBox', module)
 
     return (<>
         <ComboBox
+          w={'20em'}
           initialValue={state.selectedItem}
           options={state.options}
           itemFilter={(item, inputValue) => (
@@ -317,6 +318,13 @@ storiesOf('ComboBox', module)
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
         }}
+        createRender={(item, {isHighlighted}) => (
+          <Flex flex={1} direction='center' align='center' bg={isHighlighted && 'black'} color={isHighlighted && 'white'}>
+            <Box flex={1} p={'0.25rem'}>
+              Create {item.name}
+            </Box>
+          </Flex>
+        )}
         itemRender={(item, {isHighlighted}) => (
           <Flex flex={1} direction='center' align='center' bg={isHighlighted && 'black'} color={isHighlighted && 'white'}>
             <Box p={'0.25rem'}>
