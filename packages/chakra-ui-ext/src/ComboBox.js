@@ -35,8 +35,8 @@ const ComboBox = forwardRef(({
     switch (mode) {
       case 'primitive':
         return {
-          setCreated: ({text}) => (text),
-          isCreatedValue: (selectedItem, {items}) => {
+          setCreatedItem: ({text}) => (text),
+          isCreatedItem: (selectedItem, {items}) => {
             return selectedItem && !items.find(item => selectedItem === item);
           },
           hasText: ({selectedItem, inputValue=''}) => (
@@ -88,10 +88,10 @@ const ComboBox = forwardRef(({
       case 'object':
       default:
         return {
-          setCreated: (text, textKey, valueKey, createdKey) => (
-            {[createdKey]: true, [textKey]: inputValue, [valueKey]: undefined }
+          setCreatedItem: ({text, textKey, valueKey, createdKey}) => (
+            {[createdKey]: true, [textKey]: text, [valueKey]: undefined }
           ),          
-          isCreatedValue: (item, {createdKey}) => {
+          isCreatedItem: (item, {createdKey}) => {
             return item && item[createdKey] === true;
           },
           hasText: ({selectedItem, inputValue='', textKey}) => (
@@ -102,7 +102,6 @@ const ComboBox = forwardRef(({
             selectedItem && (selectedItem[valueKey] !== undefined && selectedItem[valueKey] !== null)
           ),
           findSelected: (items, {inputValue, selectedItem, valueKey, textKey}) => {
-            
             const valueFound = items.find((item) => {
               return selectedItem && selectedItem[valueKey].toString() === item[valueKey].toString();
             });
@@ -153,16 +152,15 @@ const ComboBox = forwardRef(({
   };  
 
   const {
-    hasValue, findSelected, isSelected, isCreatedValue,
+    hasValue, findSelected, isSelected, isCreatedItem,
     getSelectedText, getSelectedItem, matchers, renderers,
-    setCreated, hasText, getSelectedValue
+    setCreatedItem, hasText, getSelectedValue
   } = modeSelect(optionsMode);
 
   itemRender = itemRender ? itemRender : renderers.item;
   createRender = createRender ? createRender : renderers.create;
 
   const filterMatcher = typeof itemFilter === 'function' ? itemFilter : matchers[itemFilter];
-
   const stateReducer = (state, {changes, props, type}) => {
     
     switch (type) {
@@ -174,7 +172,7 @@ const ComboBox = forwardRef(({
         return {...changes, inputValue};
       case useCombobox.stateChangeTypes.InputChange:
       case useCombobox.stateChangeTypes.FunctionSetInputValue:
-        const highlightedIndex = props.items.findIndex((item) => (filterMatcher(item, changes.inputValue)));
+        const highlightedIndex = props.items.findIndex((item) => (filterMatcher(item, changes.inputValue));
         const selectedItem =  getSelectedText(changes.selectedItem) !== inputValue ? null : changes.selectedItem;
         return {...changes, highlightedIndex, selectedItem};
       // disable Esc by passing the current state aka no changes
@@ -235,6 +233,13 @@ const ComboBox = forwardRef(({
       if(remoteOptions && (!item || (item && !_autoSelect))) {
         debouncedCallback(inputValue.trim())
       }
+      // if local options
+      if(!remoteOptions && allowCreate && !item && inputValue.trim()) {
+        setItems([
+          setCreatedItem({text: inputValue, textKey, valueKey, createdKey}),
+          ...options,
+        ])
+      }
 
       onInput(inputValue);
     },
@@ -243,7 +248,7 @@ const ComboBox = forwardRef(({
       const item = getSelectedItem(selectedItem);
 
       // the item is was selected remove the create option
-      if(item && !isCreatedValue(item, {items, createdKey})) {
+      if(item && !isCreatedItem(item, {items, createdKey})) {
         if(allowCreate && items.length && items[0][createdKey]) {
           items.shift();
         }
@@ -304,21 +309,19 @@ const ComboBox = forwardRef(({
 
     if(!remoteOptions) {
       // for now remote options sets after it loads to delay menu opening
-      if(allowCreate && hasText({inputValue: text, selectedItem: item, textKey})) {
+      if(allowCreate && !item && text) {
         setItems([
-          setCreated({text, textKey, valueKey, createdKey}),
+          setCreatedItem({text, textKey, valueKey, createdKey}),
           ...options,
         ])
       }
-      
+      // the create item is not yet set here;
       const found = findSelected(items, {selectedItem: item, inputValue: text, valueKey, textKey});
 
       if(_autoSelect) {
         setAutoSelect(false);
         selectItem(found);
       }
-
-
     }
 
   }, []);
@@ -356,7 +359,7 @@ const ComboBox = forwardRef(({
             marginRight: '0.25rem'
           }}
         >
-          {(hasValue(selectedItem) || isCreatedValue(selectedItem, {items, createdKey}))
+          {(hasValue(selectedItem) || isCreatedItem(selectedItem, {items, createdKey}))
             && !isLoading && (
             <Box
               w={'1.25rem'}
@@ -445,7 +448,7 @@ const ComboBox = forwardRef(({
                 {...getItemProps({item, index})}
               >     
                 {
-                  isCreatedValue(item, {items, createdKey}) ?
+                  isCreatedItem(item, {items, createdKey}) ?
                     createRender(item, {textKey, isHighlighted, columns}) :
                     itemRender(item, {textKey, isHighlighted, columns})
                 }
