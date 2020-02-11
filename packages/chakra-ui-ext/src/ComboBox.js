@@ -2,7 +2,7 @@ import React, {useState, useEffect, useRef, forwardRef} from 'react';
 import {useCombobox} from 'downshift';
 import {useDebouncedCallback} from 'use-debounce';
 
-import {Spinner, Input, InputGroup, InputRightElement, Icon, useTheme, Box } from '@chakra-ui/core';
+import {Spinner, Input, InputGroup, InputRightElement, Icon, useTheme, PseudoBox, Box } from '@chakra-ui/core';
 import {useCombinedRefs} from './combined-refs';
 
 const ComboBox = forwardRef(({
@@ -14,15 +14,13 @@ const ComboBox = forwardRef(({
   textKey='text',
   createdKey='isCreated',
   placeholder,
-  focusBorderColor,
-  errorBorderColor,
   isInvalid=false,
   isDisabled=false,
   options=[],
   remoteOptions,
   allowCreate=false,
-  autoSelect=false,
-  autoLoad=false,
+  autoSelect=true,
+  preFetch=false,
   onFocus=() => {},
   onBlur=() => {},
   onInput=()=>{},
@@ -38,10 +36,16 @@ const ComboBox = forwardRef(({
     switch (mode) {
       case 'primitive':
         return {
+          setCreated: ({text}) => (text),
           isCreatedValue: (selectedItem, {items}) => {
-            return selectedItem && !items.find(item => selectItem === item);
+            return selectedItem && !items.find(item => selectedItem === item);
           },
-          hasValue: (selectedItem) => (selectedItem !== undefined && selectedItem !== null),
+          hasText: ({selectedItem, inputValue=''}) => (
+            selectedItem !== undefined || inputValue.trim().length
+          ),          
+          hasValue: (selectedItem) => (
+            selectedItem !== undefined && selectedItem !== null
+          ),
           findSelected: (items, {inputValue}) => (
             items.find((item) => (
               inputValue && inputValue.toString().trim() === item.toString().trim()
@@ -67,10 +71,14 @@ const ComboBox = forwardRef(({
           },
           renderers: {
             item: (item, {isHighlighted, columns}) => (
-              <div style={{padding: '0.5rem', textAlign: columns > 1 && 'center'}}>{item}</div>
+              <div style={{padding: '0.5rem', textAlign: columns > 1 && 'center'}}>
+                {item}
+              </div>
             ),
             create: (item, {isHighlighted, columns}) => (
-              <div style={{padding: '0.5rem'}}>{item}</div>
+              <div style={{padding: '0.5rem'}}>
+               `{item}`
+              </div>
             ),
           }
         };
@@ -78,12 +86,18 @@ const ComboBox = forwardRef(({
       case 'object':
       default:
         return {
+          setCreated: (text, textKey, valueKey, createdKey) => (
+            {[createdKey]: true, [textKey]: inputValue, [valueKey]: undefined }
+          ),          
           isCreatedValue: (item, {createdKey}) => {
             return item && item[createdKey] === true;
-          }, 
+          },
+          hasText: ({selectedItem, inputValue='', textKey}) => (
+            selectedItem && (selectedItem[textKey] !== undefined && selectedItem[textKey] !== null) ||
+            inputValue.trim().length > 0
+          ),
           hasValue: (selectedItem) => (
-            selectedItem && ((selectedItem[valueKey] !== undefined && selectedItem[valueKey] !== null) 
-            || selectedItem[createdKey])
+            selectedItem && (selectedItem[valueKey] !== undefined && selectedItem[valueKey] !== null)
           ),
           findSelected: (items, {inputValue, selectedItem, valueKey, textKey}) => {
             
@@ -120,10 +134,12 @@ const ComboBox = forwardRef(({
           },
           renderers: {
             item: (item, {isHighlighted, columns, textKey}) => (
-              <div style={{padding: '0.5rem', textAlign: columns > 1 && 'center'}}>{item[textKey]}</div>
+              <div style={{padding: '0.5rem', textAlign: columns > 1 && 'center'}}>
+                {item[textKey]}
+              </div>
             ),
             create: (item, {isHighlighted, columns, textKey}) => (
-              <div style={{padding: '0.5rem'}}>{item[textKey]}</div>
+              <div style={{padding: '0.5rem'}}>create `{item[textKey]}`</div>
             ),
           }          
         };
@@ -133,7 +149,8 @@ const ComboBox = forwardRef(({
 
   const {
     hasValue, findSelected, isSelected, isCreatedValue,
-    getSelectedText, getSelectedItem, matchers, renderers
+    getSelectedText, getSelectedItem, matchers, renderers,
+    setCreated, hasText
   } = modeSelect(optionsMode);
 
   itemRender = itemRender ? itemRender : renderers.item;
@@ -167,8 +184,9 @@ const ComboBox = forwardRef(({
   );
 
   const [everLoaded, setEverLoaded] = useState(false);
-  const [_autoLoad, setAutoLoad] = useState(autoLoad);
   const [_autoSelect, setAutoSelect] = useState(autoSelect);
+  const [_preFetch, setPreFetch] = useState(preFetch);
+  console.log(_preFetch, preFetch)
   const [isLoading, setLoading] = useState(false);
   const [items, setItems] = useState(options);
 
@@ -199,16 +217,19 @@ const ComboBox = forwardRef(({
     itemToString: (item) => {
       getSelectedText(item)
     },
-    onInputValueChange: ({selectedItem, inputValue}) => {
+    onInputValueChange: async ({selectedItem, inputValue}) => {
       const item = getSelectedItem(selectedItem);
 
       // if an item is set dont re-fetch unless its on the first load
-      // and autoLoad is set
-      if(remoteOptions && ((!item && _autoSelect) || (item && _autoLoad))) {
-        console.log('shouldnt get here')
+      // and preFetch is set
+      if(remoteOptions && !_preFetch ) {
+        setPreFetch(false);
+        return;
+      }
+
+      if(remoteOptions && (!item || (item && !_autoSelect))) {
         debouncedCallback(inputValue.trim())
       }
-      setAutoLoad(false);
 
       onInput(inputValue);
     },
@@ -232,6 +253,7 @@ const ComboBox = forwardRef(({
       if(!everLoaded) {
         setEverLoaded(true);
       }
+
       setLoading(true);
 
       const items = await fetchFunction(inputValue);
@@ -261,25 +283,30 @@ const ComboBox = forwardRef(({
   useEffect(() => {
     
     let text = initialText.toString().trim();
-    const selectedItem = getSelectedItem(initialValue);
+    const item = getSelectedItem(initialValue);
 
-    if(selectedItem) {
-      text = getSelectedText(selectedItem);
-      if(hasValue(selectedItem)) {
-        selectItem(selectedItem);
-      }
+    if(hasValue(item)) {
+      selectItem(item);
     }
-    
+
+    if(item) {
+      text = getSelectedText(item)
+    }
+
     if(text) {
       setInputValue(text)
     }
 
-    if(!remoteOptions && allowCreate && (text || selectedItem)) {
-      setItems([
-        {[createdKey]: true, [textKey]: inputValue, [valueKey]: undefined },
-        ...options,
-      ])
+    if(!remoteOptions) {
+      // for now remote options sets after it loads to delay menu opening
+      if(allowCreate && hasText({inputValue: text, selectedItem: item, textKey})) {
+        setItems([
+          setCreated({text, textKey, valueKey, createdKey}),
+          ...options,
+        ])
+      }
     }
+
   }, []);
 
   const {inputRef, ...inputProps} = getInputProps({
@@ -290,10 +317,8 @@ const ComboBox = forwardRef(({
         await remoteData(remoteOptions, {inputValue, selectedItem, valueKey, textKey})
       }
     },
-    onBlur: () => {
-      onBlur();
-    },
     onClick: () => {
+      console.log(selectedItem)
       openMenu();
     },
   });
@@ -302,13 +327,14 @@ const ComboBox = forwardRef(({
   const combinedRef = useCombinedRefs(ref, comboBoxRef, inputRef);
 
   return (
-    <Box w='100%' position='relative' backgroundColor='white' {...rest}>
+    <PseudoBox w='100%' position='relative' backgroundColor='white' {...rest}>
       <InputGroup w='100%' position='relative' {...comboBoxProps}>
         <Input
           ref={combinedRef}
           {...inputProps}
           placeholder={placeholder}
           isDisabled={isDisabled}
+          isInvalid={isInvalid}
         />
 
         <InputRightElement
@@ -317,7 +343,8 @@ const ComboBox = forwardRef(({
             marginRight: '0.25rem'
           }}
         >
-          {hasValue(selectedItem) && !isLoading && (
+          {(hasValue(selectedItem) || isCreatedValue(selectedItem, {items, createdKey}))
+            && !isLoading && (
             <Box
               w={'1.25rem'}
               fontSize={'0.625rem'}
@@ -342,7 +369,7 @@ const ComboBox = forwardRef(({
               {...getToggleButtonProps({
                 onClick: (e) => {
                   if(isDisabled) {
-                    // todo blur the caret focus
+                    // TODO blur the caret focus
                     e.nativeEvent.preventDownshiftDefault = true
                     return;
                   }
@@ -387,6 +414,7 @@ const ComboBox = forwardRef(({
                 key={index}
                 style={Object.assign({
                     cursor: 'pointer',
+                    userSelect: 'none',
                     width: `${1 / (columns * 1.0) * 100}%`,
                     display: columns === 1  ? 'flex' : 'inline-flex',
                     alignItems: columns === 1 ? 'flex-start' : 'center',
@@ -413,7 +441,7 @@ const ComboBox = forwardRef(({
           })}
         </div>
       )}
-    </Box>
+    </PseudoBox>
   );
 });
 

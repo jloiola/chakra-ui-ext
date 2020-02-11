@@ -154,7 +154,7 @@ storiesOf('ComboBox', module)
 
     return (<>
         <ComboBox
-          w={'20em'}
+          w={'25em'}
           initialValue={state.selectedItem}
           options={state.options}
           itemFilter={(item, inputValue) => (
@@ -189,7 +189,8 @@ storiesOf('ComboBox', module)
           onChange={(selectedItem) => {
             setState((state) => ({...state, selectedItem}))
           }}
-          columns={5}
+          columns={4}
+          w={'25rem'}
         />
         <div>
           <pre>
@@ -202,7 +203,7 @@ storiesOf('ComboBox', module)
   .add('Basic w/create', () =>  {
 
     const [state, setState] = useState({
-      inputValue: '',
+      inputValue: 'soemthing here',
       selectedItem: null,
       options: dogData.map((dog,i) => ({text: dog, value: i})),
     });
@@ -225,6 +226,32 @@ storiesOf('ComboBox', module)
       </>
     );  
   })
+  .add('Basic invalid', () =>  {
+
+    const [state, setState] = useState({
+      inputValue: '',
+      selectedItem: null,
+      options: dogData.map((dog,i) => ({text: dog, value: i})),
+    });
+
+    return (<>
+        <ComboBox
+          isInvalid={true}
+          initialText={state.inputValue}
+          initialValue={state.selectedItem}
+          options={state.options}
+          onChange={(selectedItem) => {
+            setState((state) => ({...state, selectedItem}))
+          }}
+        />
+        <div>
+          <pre>
+            {JSON.stringify(state.selectedItem, null, 2)}
+          </pre>
+        </div>
+      </>
+    );  
+  })  
    .add('Remote', () =>  {
 
     const [state, setState] = useState({
@@ -268,6 +295,7 @@ storiesOf('ComboBox', module)
         initialValue={state.selectedItem}
         remoteOptions={fetchRick}
         autoSelect={true}
+        preFetch={true}        
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
         }}
@@ -351,6 +379,7 @@ storiesOf('ComboBox', module)
         valueKey='id'
         initialText={state.inputValue}
         initialValue={state.selectedItem}
+        preFetch={true}
         remoteOptions={fetchRick}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
