@@ -295,7 +295,7 @@ storiesOf('ComboBox', module)
         initialValue={state.selectedItem}
         remoteOptions={fetchRick}
         autoSelect={true}
-        preFetch={true}        
+        preFetch={true}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
         }}
@@ -351,7 +351,7 @@ storiesOf('ComboBox', module)
         initialText={state.inputValue}
         initialValue={state.selectedItem}
         remoteOptions={fetchRick}
-        autoSelect={true}
+        preFetch={true}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
         }}
