@@ -19,8 +19,7 @@ const ComboBox = forwardRef(({
   options=[],
   remoteOptions,
   allowCreate=false,
-  autoSelect=true,
-  preFetch=false,
+  preFetch=true,
   onFocus=() => {},
   onBlur=() => {},
   onInput=()=>{},
@@ -57,6 +56,9 @@ const ComboBox = forwardRef(({
           },
           getSelectedText: (item) => {
             return (item === undefined || item === null) ? '' : item.toString();
+          },
+          getSelectedValue: (item) => {
+            return (item === undefined || item === null) ? undefined : item.toString();
           },
           matchers: {
             exact: (item, inputValue) => (
@@ -121,6 +123,9 @@ const ComboBox = forwardRef(({
           getSelectedText: (item) => {
             return !(item && item[textKey]) ? '' : item[textKey].toString();
           },
+          getSelectedValue: (item) => {
+            return (item === undefined || item === null) ? undefined : item[valueKey].toString();
+          },
           matchers: {
             exact: (item, inputValue) => (
               item && item[textKey].toString().toLowerCase() === inputValue.toString().toLowerCase()
@@ -150,7 +155,7 @@ const ComboBox = forwardRef(({
   const {
     hasValue, findSelected, isSelected, isCreatedValue,
     getSelectedText, getSelectedItem, matchers, renderers,
-    setCreated, hasText
+    setCreated, hasText, getSelectedValue
   } = modeSelect(optionsMode);
 
   itemRender = itemRender ? itemRender : renderers.item;
@@ -159,9 +164,10 @@ const ComboBox = forwardRef(({
   const filterMatcher = typeof itemFilter === 'function' ? itemFilter : matchers[itemFilter];
 
   const stateReducer = (state, {changes, props, type}) => {
+    
     switch (type) {
-      case useCombobox.stateChangeTypes.InputKeyDownEnter:
       case useCombobox.stateChangeTypes.FunctionSelectItem:
+      case useCombobox.stateChangeTypes.InputKeyDownEnter:        
       case useCombobox.stateChangeTypes.ItemClick:
         const text = getSelectedText(changes.selectedItem);
         const inputValue = text ? text : changes.inputValue;
@@ -184,9 +190,8 @@ const ComboBox = forwardRef(({
   );
 
   const [everLoaded, setEverLoaded] = useState(false);
-  const [_autoSelect, setAutoSelect] = useState(autoSelect);
+  const [_autoSelect, setAutoSelect] = useState(true);
   const [_preFetch, setPreFetch] = useState(preFetch);
-  console.log(_preFetch, preFetch)
   const [isLoading, setLoading] = useState(false);
   const [items, setItems] = useState(options);
 
@@ -305,6 +310,15 @@ const ComboBox = forwardRef(({
           ...options,
         ])
       }
+      
+      const found = findSelected(items, {selectedItem: item, inputValue: text, valueKey, textKey});
+
+      if(_autoSelect) {
+        setAutoSelect(false);
+        selectItem(found);
+      }
+
+
     }
 
   }, []);
@@ -318,7 +332,6 @@ const ComboBox = forwardRef(({
       }
     },
     onClick: () => {
-      console.log(selectedItem)
       openMenu();
     },
   });

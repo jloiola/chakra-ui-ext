@@ -294,8 +294,6 @@ storiesOf('ComboBox', module)
         initialText={state.inputValue}
         initialValue={state.selectedItem}
         remoteOptions={fetchRick}
-        autoSelect={true}
-        preFetch={true}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
         }}
@@ -322,6 +320,7 @@ storiesOf('ComboBox', module)
         initialText={state.inputValue}
         initialValue={state.selectedItem}
         remoteOptions={fetchRick}
+        preFetch={false}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
         }}
@@ -351,7 +350,6 @@ storiesOf('ComboBox', module)
         initialText={state.inputValue}
         initialValue={state.selectedItem}
         remoteOptions={fetchRick}
-        preFetch={true}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
         }}
@@ -379,7 +377,6 @@ storiesOf('ComboBox', module)
         valueKey='id'
         initialText={state.inputValue}
         initialValue={state.selectedItem}
-        preFetch={true}
         remoteOptions={fetchRick}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
