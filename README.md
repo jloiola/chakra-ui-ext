@@ -12,11 +12,13 @@ chakra-ui-ext-storybook
 yarn build
 ```
 
+mode=local|remote
 
-npx oao run-script <script> --parallel
-npx oao add chakra-ui-ext-storybook
+localData='options'
+remoteData='remoteOptions'
 
-
-
-defaultValue = 1 
-defaultText = '1'
+optionType=primitive|object
+allowCreate=true|false
+valueKey='value'
+textKey='text'
+createdKey='isCreated'

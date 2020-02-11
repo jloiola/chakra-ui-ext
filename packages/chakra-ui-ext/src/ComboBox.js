@@ -6,7 +6,7 @@ import {Spinner, Input, InputGroup, InputRightElement, Icon, useTheme, PseudoBox
 import {useCombinedRefs} from './combined-refs';
 
 const ComboBox = forwardRef(({
-  optionsMode='object',
+  optionType='object',
   itemFilter='startsWith',
   initialText='',
   initialValue=null,
@@ -155,7 +155,7 @@ const ComboBox = forwardRef(({
     hasValue, findSelected, isSelected, isCreatedItem,
     getSelectedText, getSelectedItem, matchers, renderers,
     setCreatedItem, hasText, getSelectedValue
-  } = modeSelect(optionsMode);
+  } = modeSelect(optionType);
 
   itemRender = itemRender ? itemRender : renderers.item;
   createRender = createRender ? createRender : renderers.create;

@@ -183,7 +183,7 @@ storiesOf('ComboBox', module)
 
     return (<>
         <ComboBox
-          optionsMode='primitive'
+          optionType='primitive'
           initialValue={state.selectedItem}
           options={state.options}
           onChange={(selectedItem) => {
