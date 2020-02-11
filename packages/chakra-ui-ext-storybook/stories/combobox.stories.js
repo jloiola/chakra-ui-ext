@@ -12,7 +12,7 @@ storiesOf('ComboBox', module)
   .addParameters({
     component: ComboBox
   })
-  .add('Basic startsWith match', () =>  {
+  .add('Local startsWith match', () =>  {
 
     const [state, setState] = useState({
       inputValue: '',
@@ -38,7 +38,7 @@ storiesOf('ComboBox', module)
       </>
     );  
   })
-   .add('Basic contains match', () =>  {
+   .add('Local contains match', () =>  {
 
     const [state, setState] = useState({
       inputValue: '',
@@ -64,7 +64,7 @@ storiesOf('ComboBox', module)
       </>
     );  
   })
-   .add('Basic disabled w/o value', () =>  {
+   .add('Local disabled w/o value', () =>  {
 
     const [state, setState] = useState({
       inputValue: '',
@@ -91,7 +91,7 @@ storiesOf('ComboBox', module)
       </>
     );  
   }) 
-  .add('Basic disabled w/text', () =>  {
+  .add('Local disabled w/text', () =>  {
 
     const [state, setState] = useState({
       inputValue: 'Norfolk Spaniel',
@@ -118,7 +118,7 @@ storiesOf('ComboBox', module)
       </>
     );  
   }) 
-  .add('Basic disabled w/value', () =>  {
+  .add('Local disabled w/value', () =>  {
 
     const [state, setState] = useState({
       inputValue: '',
@@ -145,7 +145,7 @@ storiesOf('ComboBox', module)
       </>
     );  
   })   
-  .add('Basic custom matcher & column display', () =>  {
+  .add('Local custom matcher & column display', () =>  {
 
     const [state, setState] = useState({
       selectedItem: {text: 'May', value: 5},
@@ -174,7 +174,7 @@ storiesOf('ComboBox', module)
       </>
     );  
   })
-  .add('Basic primitive options pre-selected', () =>  {
+  .add('Local primitive options pre-selected', () =>  {
 
     const [state, setState] = useState({
       options: years(),
@@ -199,8 +199,34 @@ storiesOf('ComboBox', module)
         </div>
       </>
     );  
-  })  
-  .add('Basic w/create', () =>  {
+  })
+  .add('Local primitive w/create', () =>  {
+
+    const [state, setState] = useState({
+      options: years(),
+      selectedItem: 1980,
+    });
+
+    return (<>
+        <ComboBox
+          optionType='primitive'
+          initialValue={state.selectedItem}
+          options={state.options}
+          allowCreate={true}
+          onChange={(selectedItem) => {
+            setState((state) => ({...state, selectedItem}))
+          }}
+        />
+        <div>
+          <pre>
+            {JSON.stringify(state.selectedItem, null, 2)}
+          </pre>
+        </div>
+      </>
+    );  
+  })    
+
+  .add('Local w/create', () =>  {
 
     const [state, setState] = useState({
       inputValue: 'soemthing here',
@@ -226,7 +252,7 @@ storiesOf('ComboBox', module)
       </>
     );  
   })
-  .add('Basic invalid', () =>  {
+  .add('Local invalid', () =>  {
 
     const [state, setState] = useState({
       inputValue: '',

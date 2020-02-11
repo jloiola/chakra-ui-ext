@@ -162,8 +162,9 @@ const ComboBox = forwardRef(({
 
   const filterMatcher = typeof itemFilter === 'function' ? itemFilter : matchers[itemFilter];
   const stateReducer = (state, {changes, props, type}) => {
-    
     switch (type) {
+      case useCombobox.stateChangeTypes.InputBlur:
+        return {...changes, inputValue: state.inputValue, selectedItem: state.selectedItem};
       case useCombobox.stateChangeTypes.FunctionSelectItem:
       case useCombobox.stateChangeTypes.InputKeyDownEnter:        
       case useCombobox.stateChangeTypes.ItemClick:
@@ -234,11 +235,17 @@ const ComboBox = forwardRef(({
         debouncedCallback(inputValue.trim())
       }
       // if local options
-      if(!remoteOptions && allowCreate && !item && inputValue.trim()) {
-        setItems([
-          setCreatedItem({text: inputValue, textKey, valueKey, createdKey}),
-          ...options,
-        ])
+      if(!remoteOptions && allowCreate && !item) {
+        if(inputValue.trim()) {
+          setItems([
+            setCreatedItem({text: inputValue, textKey, valueKey, createdKey}),
+            ...options,
+          ])
+        } else {
+          setItems([
+            ...options,
+          ])          
+        }
       }
 
       onInput(inputValue);
