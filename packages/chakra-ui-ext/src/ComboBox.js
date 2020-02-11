@@ -172,7 +172,7 @@ const ComboBox = forwardRef(({
         return {...changes, inputValue};
       case useCombobox.stateChangeTypes.InputChange:
       case useCombobox.stateChangeTypes.FunctionSetInputValue:
-        const highlightedIndex = props.items.findIndex((item) => (filterMatcher(item, changes.inputValue));
+        const highlightedIndex = props.items.findIndex((item) => (filterMatcher(item, changes.inputValue)));
         const selectedItem =  getSelectedText(changes.selectedItem) !== inputValue ? null : changes.selectedItem;
         return {...changes, highlightedIndex, selectedItem};
       // disable Esc by passing the current state aka no changes
