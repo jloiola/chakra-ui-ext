@@ -177,20 +177,6 @@ const ComboBox = forwardRef(({
   }, debounceMs);
 
   const theme = useTheme();
-  focusBorderColor = focusBorderColor ? focusBorderColor : theme.colors.blue['500'];
-  errorBorderColor = errorBorderColor ? errorBorderColor : theme.colors.red['500'];
-  const currentBorderColor = isInvalid ? errorBorderColor : focusBorderColor;
-
-  // ugh this
-  const boxShadow = (currentBorderColor) => {
-    return [
-      `0 0 0 0`,
-      `0 0 0 0`,
-      `0 1px 0 1px ${currentBorderColor}`,
-      `0 1px 0 1px ${currentBorderColor}`,
-      `0 0 0 0`,
-    ].join()
-  };
 
   const {
     getToggleButtonProps,
@@ -200,6 +186,7 @@ const ComboBox = forwardRef(({
     getItemProps,
     isOpen,
     openMenu,
+    closeMenu,
     inputValue,
     setInputValue,
     selectItem,
@@ -302,6 +289,9 @@ const ComboBox = forwardRef(({
       if(!everLoaded && remoteOptions) {
         await remoteData(remoteOptions, {inputValue, selectedItem, valueKey, textKey})
       }
+    },
+    onBlur: () => {
+      onBlur();
     },
     onClick: () => {
       openMenu();
