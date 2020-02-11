@@ -12,7 +12,8 @@ const config = {
     {
       file: pkg.browser,
       format: 'umd',
-      name: 'Example',
+      name: 'chakra-ui-ext',
+      sourceMap: true,
     }
   ],
   external: [
@@ -46,7 +47,7 @@ const config = {
         ]
       }
     }),
-    babel({ exclude: '**/node_modules/**' }),
+    babel({ exclude: '**/node_modules/**', sourceMaps: true}),
     filesize(),
   ],
 };

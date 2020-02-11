@@ -22,6 +22,7 @@ const ComboBox = forwardRef(({
   remoteOptions,
   allowCreate=false,
   autoSelect=false,
+  autoLoad=false,
   onFocus=() => {},
   onBlur=() => {},
   onInput=()=>{},
@@ -165,14 +166,15 @@ const ComboBox = forwardRef(({
     isOpen && !isLoading && items && items.length > 0
   );
 
+  const [everLoaded, setEverLoaded] = useState(false);
+  const [_autoLoad, setAutoLoad] = useState(autoLoad);
+  const [_autoSelect, setAutoSelect] = useState(autoSelect);
+  const [isLoading, setLoading] = useState(false);
+  const [items, setItems] = useState(options);
+
   const [debouncedCallback] = useDebouncedCallback(async (inputValue) => {
     await remoteData(remoteOptions, {inputValue, selectedItem, valueKey, textKey})
   }, debounceMs);
-
-  const [tryAutoSelect, setAutoSelect] = useState(autoSelect);
-  const [previousInputValue, setPreviousInputValue] = useState('');
-  const [isLoading, setLoading] = useState(false);
-  const [items, setItems] = useState(options);
 
   const theme = useTheme();
   focusBorderColor = focusBorderColor ? focusBorderColor : theme.colors.blue['500'];
@@ -212,12 +214,16 @@ const ComboBox = forwardRef(({
     },
     onInputValueChange: ({selectedItem, inputValue}) => {
       const item = getSelectedItem(selectedItem);
-      // fetch remote data on input change
-      if(remoteOptions && !item) {
+
+      // if an item is set dont re-fetch unless its on the first load
+      // and autoLoad is set
+      if(remoteOptions && ((!item && _autoSelect) || (item && _autoLoad))) {
+        console.log('shouldnt get here')
         debouncedCallback(inputValue.trim())
       }
+      setAutoLoad(false);
 
-      onInput(inputValue)
+      onInput(inputValue);
     },
     onSelectedItemChange: ({selectedItem}) => {
 
@@ -236,6 +242,9 @@ const ComboBox = forwardRef(({
 
   const remoteData = async (fetchFunction, {inputValue, selectedItem, valueKey, textKey}) => {
     try {
+      if(!everLoaded) {
+        setEverLoaded(true);
+      }
       setLoading(true);
 
       const items = await fetchFunction(inputValue);
@@ -250,12 +259,10 @@ const ComboBox = forwardRef(({
 
       setItems(items)
 
-      if(tryAutoSelect) {
+      if(_autoSelect) {
         setAutoSelect(false);
         selectItem(found);
       }
-      
-      setPreviousInputValue(inputValue)
 
     } catch (err) {
       console.error(err);
@@ -265,20 +272,22 @@ const ComboBox = forwardRef(({
   };  
 
   useEffect(() => {
-
-    const selectedItem = getSelectedItem(initialValue);
     
+    let text = initialText.toString().trim();
+    const selectedItem = getSelectedItem(initialValue);
+
     if(selectedItem) {
-      const text = getSelectedText(selectedItem);
-      setInputValue(text);
+      text = getSelectedText(selectedItem);
       if(hasValue(selectedItem)) {
         selectItem(selectedItem);
       }
-    } else if(initialText && initialText.toString().trim()) {
-      setInputValue(initialText)
     }
-     
-    if(!remoteOptions && allowCreate && initialText && initialText.toString().trim() && !selectedItem) {
+    
+    if(text) {
+      setInputValue(text)
+    }
+
+    if(!remoteOptions && allowCreate && (text || selectedItem)) {
       setItems([
         {[createdKey]: true, [textKey]: inputValue, [valueKey]: undefined },
         ...options,
@@ -288,27 +297,28 @@ const ComboBox = forwardRef(({
 
   const {inputRef, ...inputProps} = getInputProps({
     refKey: 'inputRef',
-    onFocus: (e) => { onFocus(); },
-    onClick: () => { openMenu();},
+    onFocus: async (e) => {
+      onFocus();
+      if(!everLoaded && remoteOptions) {
+        await remoteData(remoteOptions, {inputValue, selectedItem, valueKey, textKey})
+      }
+    },
+    onClick: () => {
+      openMenu();
+    },
   });
   
-  const combinedRef = useCombinedRefs(ref, inputRef);
+  const {comboBoxRef, ...comboBoxProps} = getComboboxProps({refKey: 'comboBoxRef'});
+  const combinedRef = useCombinedRefs(ref, comboBoxRef, inputRef);
 
   return (
     <Box w='100%' position='relative' backgroundColor='white' {...rest}>
-      <InputGroup w='100%' position='relative' {...getComboboxProps()}>
+      <InputGroup w='100%' position='relative' {...comboBoxProps}>
         <Input
           ref={combinedRef}
           {...inputProps}
           placeholder={placeholder}
           isDisabled={isDisabled}
-          style={{
-            flex: 1,
-            transition: 'none',
-            borderRadius: isOpen && items.length ?
-              `${theme.sizes['1']} ${theme.sizes['1']} 0 0` :
-              `${theme.sizes['1']}`,
-          }}
         />
 
         <InputRightElement
@@ -372,15 +382,12 @@ const ComboBox = forwardRef(({
             zIndex: theme.zIndices.overlay,
             position: 'absolute',
             backgroundColor: 'white',
-            border: `1px solid ${currentBorderColor}`,
-            borderRadius: `0 0 ${theme.sizes['1']} ${theme.sizes['1']}`,
-            maxHeight: '360px',
+            border: `1px solid ${theme.colors.blue['500']}`,
+            maxHeight: '20rem',
             overflowY: 'auto',
-            top: `37px`,
+            top: `2.75rem`,
             width: '100%',
-            boxShadow: boxShadow(currentBorderColor),
-            borderBottom: 'none',
-            borderTop: 'none',
+            borderRadius: `${theme.sizes['1']}`
           }}
         >
           {items.map((item, index) => {
@@ -389,17 +396,20 @@ const ComboBox = forwardRef(({
               <div
                 key={index}
                 style={Object.assign({
+                    cursor: 'pointer',
                     width: `${1 / (columns * 1.0) * 100}%`,
                     display: columns === 1  ? 'flex' : 'inline-flex',
                     alignItems: columns === 1 ? 'flex-start' : 'center',
                     justifyContent: columns === 1 ? 'flex-start' : 'center',
                   },
-                  isHighlighted ? {backgroundColor: theme.colors.blue['50'], opacity: 0.8} : {},
-                  isSelected(item, selectedItem, {valueKey}) ? {
-                    backgroundColor: theme.colors.blue['100'], opacity: 0.8,
-                    borderTop: `1px solid ${theme.colors.blue['200']}`,
-                    borderBottom: `1px solid ${theme.colors.blue['200']}`,
-                  } : {},
+                  isHighlighted && {
+                    backgroundColor: theme.colors.blue['50'], opacity: 0.8
+                  },
+                  isSelected(item, selectedItem, {valueKey}) && {
+                    backgroundColor: theme.colors.blue['100'],
+                    opacity: 0.8,
+                    border: `1px solid ${theme.colors.blue['200']}`,
+                  },
                 )}
                 {...getItemProps({item, index})}
               >     
