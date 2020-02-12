@@ -1,6 +1,6 @@
 {
   "name": "chakra-ui-ext",
-  "version": "0.2.20",
+  "version": "0.2.21",
   "description": "",
   "main": "build/index.cjs.js",
   "module": "build/index.esm.js",
