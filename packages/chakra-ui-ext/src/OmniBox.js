@@ -338,6 +338,9 @@ const OmniBox = forwardRef(({
         await remoteData(remoteOptions, {inputValue, selectedItem, valueKey, textKey})
       }
     },
+    onBlur: (e) => {
+      onBlur();
+    },
     onClick: () => {
       openMenu();
     },
