@@ -14,9 +14,6 @@ yarn build
 
 mode=local|remote
 
-localData='options'
-remoteData='remoteOptions'
-
 optionType=primitive|object
 allowCreate=true|false
 valueKey='value'

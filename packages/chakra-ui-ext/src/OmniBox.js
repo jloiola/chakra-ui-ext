@@ -5,11 +5,12 @@ import {useDebouncedCallback} from 'use-debounce';
 import {Spinner, Input, InputGroup, InputRightElement, Icon, useTheme, PseudoBox, Box } from '@chakra-ui/core';
 import {useCombinedRefs} from './combined-refs';
 
-const ComboBox = forwardRef(({
-  optionType='object',
-  itemFilter='startsWith',
-  initialText='',
-  initialValue=null,
+const OmniBox = forwardRef(({
+  optionFormat='object',
+  inputBehavior='highlight', //none|filter
+  matchFunction='startsWith', //startsWith|exact|contains|func()
+  defaultText='',
+  defaultValue=null,
   valueKey='value',
   textKey='text',
   createdKey='isCreated',
@@ -31,8 +32,8 @@ const ComboBox = forwardRef(({
   ...rest
 }, ref) => {
 
-  const modeSelect = (mode) => {
-    switch (mode) {
+  const formatSelect = (format) => {
+    switch (format) {
       case 'primitive':
         return {
           setCreatedItem: ({text}) => (text),
@@ -155,12 +156,12 @@ const ComboBox = forwardRef(({
     hasValue, findSelected, isSelected, isCreatedItem,
     getSelectedText, getSelectedItem, matchers, renderers,
     setCreatedItem, hasText, getSelectedValue
-  } = modeSelect(optionType);
+  } = formatSelect(optionFormat);
 
   itemRender = itemRender ? itemRender : renderers.item;
   createRender = createRender ? createRender : renderers.create;
 
-  const filterMatcher = typeof itemFilter === 'function' ? itemFilter : matchers[itemFilter];
+  const filterMatcher = typeof matchFunction === 'function' ? matchFunction : matchers[matchFunction];
   const stateReducer = (state, {changes, props, type}) => {
     switch (type) {
       case useCombobox.stateChangeTypes.InputBlur:
@@ -274,7 +275,9 @@ const ComboBox = forwardRef(({
       setLoading(true);
 
       const items = await fetchFunction(inputValue);
+      console.log(items, 'items')
       const found = findSelected(items, {selectedItem, inputValue, valueKey, textKey})
+      console.log(found, 'found')
 
       if(allowCreate && !found && inputValue.toString().trim()) {
         items.unshift({
@@ -299,14 +302,12 @@ const ComboBox = forwardRef(({
 
   useEffect(() => {
     
-    let text = initialText.toString().trim();
-    const item = getSelectedItem(initialValue);
+    let text = defaultText.toString().trim();
+    const value = getSelectedValue(defaultValue);
+    const item = getSelectedItem(defaultValue);
 
     if(hasValue(item)) {
       selectItem(item);
-    }
-
-    if(item) {
       text = getSelectedText(item)
     }
 
@@ -358,12 +359,15 @@ const ComboBox = forwardRef(({
           placeholder={placeholder}
           isDisabled={isDisabled}
           isInvalid={isInvalid}
+          readOnly={inputBehavior === 'none'}
+          cursor={inputBehavior === 'none' ? 'pointer' : 'text'}
         />
 
         <InputRightElement
           style={{
             justifyContent: 'flex-end',
-            marginRight: '0.25rem'
+            marginRight: '0.25rem',
+            cursor: 'pointer',
           }}
         >
           {(hasValue(selectedItem) || isCreatedItem(selectedItem, {items, createdKey}))
@@ -377,7 +381,8 @@ const ComboBox = forwardRef(({
                 }
                 setInputValue('')
                 selectItem(null);
-                openMenu();
+                setItems(options);
+                
                 inputRef.current && inputRef.current.focus()
               }}
               >
@@ -468,6 +473,4 @@ const ComboBox = forwardRef(({
   );
 });
 
-export default ComboBox;
-
-
+export default OmniBox;

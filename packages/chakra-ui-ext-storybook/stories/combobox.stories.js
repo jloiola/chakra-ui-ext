@@ -3,15 +3,89 @@ import React, {useState, useEffect,} from 'react';
 import { storiesOf } from '@storybook/react';
 import useForm from 'react-hook-form';
 
-import {ComboBox} from 'chakra-ui-ext';
+import {OmniBox} from 'chakra-ui-ext';
 import {Flex, Image, Box, Text, Stack} from '@chakra-ui/core';
 
 import { fetchJediOrSith, fetchRick, dogData, years, months} from '../data';
 
-storiesOf('ComboBox', module)
+storiesOf('OmniBox', module)
   .addParameters({
-    component: ComboBox
+    component: OmniBox
   })
+  .add('Local select only', () =>  {
+
+    const [state, setState] = useState({
+      inputValue: '',
+      selectedItem: null,
+      options: dogData.map((dog,i) => ({text: dog, value: i})),
+    });
+
+    return (<>
+        <OmniBox
+          defaultText={state.inputValue}
+          defaultValue={state.selectedItem}
+          options={state.options}
+          inputBehavior={'none'}
+          onChange={(selectedItem) => {
+            setState((state) => ({...state, selectedItem}))
+          }}
+        />
+        <div>
+          <pre>
+            {JSON.stringify(state.selectedItem, null, 2)}
+          </pre>
+        </div>
+      </>
+    );  
+  })  
+  .add('Remote select only', () =>  {
+
+    const [state, setState] = useState({
+      selectedItem: null,
+    });
+
+    return (<>
+        <OmniBox
+          defaultValue={state.selectedItem}
+          remoteOptions={() => fetchRick('sanchez')}
+          inputBehavior={'none'}
+          onChange={(selectedItem) => {
+            setState((state) => ({...state, selectedItem}))
+          }}
+        />
+        <div>
+          <pre>
+            {JSON.stringify(state.selectedItem, null, 2)}
+          </pre>
+        </div>
+      </>
+    );  
+  })
+  .add('Remote select only w/value', () =>  {
+
+    const [state, setState] = useState({
+      selectedItem: {id: 1},
+    });
+
+    return (<>
+        <OmniBox
+          defaultValue={state.selectedItem}
+          remoteOptions={() => fetchRick('sanchez')}
+          inputBehavior={'none'}
+          valueKey={'id'}
+          textKey={'name'}
+          onChange={(selectedItem) => {
+            setState((state) => ({...state, selectedItem}))
+          }}
+        />
+        <div>
+          <pre>
+            {JSON.stringify(state.selectedItem, null, 2)}
+          </pre>
+        </div>
+      </>
+    );  
+  })      
   .add('Local startsWith match', () =>  {
 
     const [state, setState] = useState({
@@ -21,9 +95,9 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-        <ComboBox
-          initialText={state.inputValue}
-          initialValue={state.selectedItem}
+        <OmniBox
+          defaultText={state.inputValue}
+          defaultValue={state.selectedItem}
           options={state.options}
           itemFilter='startsWith'
           onChange={(selectedItem) => {
@@ -47,9 +121,9 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-        <ComboBox
-          initialText={state.inputValue}
-          initialValue={state.selectedItem}
+        <OmniBox
+          defaultText={state.inputValue}
+          defaultValue={state.selectedItem}
           options={state.options}
           itemFilter='contains'
           onChange={(selectedItem) => {
@@ -73,10 +147,10 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-        <ComboBox
+        <OmniBox
           isDisabled={true}
-          initialText={state.inputValue}
-          initialValue={state.selectedItem}
+          defaultText={state.inputValue}
+          defaultValue={state.selectedItem}
           options={state.options}
           itemFilter='startsWith'
           onChange={(selectedItem) => {
@@ -100,10 +174,10 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-        <ComboBox
+        <OmniBox
           isDisabled={true}
-          initialText={state.inputValue}
-          initialValue={state.selectedItem}
+          defaultText={state.inputValue}
+          defaultValue={state.selectedItem}
           options={state.options}
           itemFilter='startsWith'
           onChange={(selectedItem) => {
@@ -127,10 +201,10 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-        <ComboBox
+        <OmniBox
           isDisabled={true}
-          initialText={state.inputValue}
-          initialValue={state.selectedItem}
+          defaultText={state.inputValue}
+          defaultValue={state.selectedItem}
           options={state.options}
           itemFilter='startsWith'
           onChange={(selectedItem) => {
@@ -153,9 +227,9 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-        <ComboBox
+        <OmniBox
           w={'25em'}
-          initialValue={state.selectedItem}
+          defaultValue={state.selectedItem}
           options={state.options}
           itemFilter={(item, inputValue) => (
             item.text.toLowerCase().indexOf(inputValue.toLowerCase()) >= 0 ||
@@ -182,9 +256,9 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-        <ComboBox
-          optionType='primitive'
-          initialValue={state.selectedItem}
+        <OmniBox
+          optionFormat='primitive'
+          defaultValue={state.selectedItem}
           options={state.options}
           onChange={(selectedItem) => {
             setState((state) => ({...state, selectedItem}))
@@ -208,9 +282,9 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-        <ComboBox
-          optionType='primitive'
-          initialValue={state.selectedItem}
+        <OmniBox
+          optionFormat='primitive'
+          defaultValue={state.selectedItem}
           options={state.options}
           allowCreate={true}
           onChange={(selectedItem) => {
@@ -235,9 +309,9 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-        <ComboBox
-          initialText={state.inputValue}
-          initialValue={state.selectedItem}
+        <OmniBox
+          defaultText={state.inputValue}
+          defaultValue={state.selectedItem}
           options={state.options}
           allowCreate={true}
           onChange={(selectedItem) => {
@@ -261,10 +335,10 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-        <ComboBox
+        <OmniBox
           isInvalid={true}
-          initialText={state.inputValue}
-          initialValue={state.selectedItem}
+          defaultText={state.inputValue}
+          defaultValue={state.selectedItem}
           options={state.options}
           onChange={(selectedItem) => {
             setState((state) => ({...state, selectedItem}))
@@ -286,13 +360,13 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-      <ComboBox
+      <OmniBox
         itemFilter='contains'
         placeholder={'search the star wars universe'}
         textKey='name'
         valueKey='name'
-        initialText={state.inputValue}
-        initialValue={state.selectedItem}
+        defaultText={state.inputValue}
+        defaultValue={state.selectedItem}
         remoteOptions={fetchJediOrSith}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
@@ -313,12 +387,12 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-      <ComboBox
+      <OmniBox
         placeholder={'pickle rick?'}
         textKey='name'
         valueKey='id'
-        initialText={state.inputValue}
-        initialValue={state.selectedItem}
+        defaultText={state.inputValue}
+        defaultValue={state.selectedItem}
         remoteOptions={fetchRick}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
@@ -339,12 +413,12 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-      <ComboBox
+      <OmniBox
         placeholder={'pickle rick?'}
         textKey='name'
         valueKey='id'
-        initialText={state.inputValue}
-        initialValue={state.selectedItem}
+        defaultText={state.inputValue}
+        defaultValue={state.selectedItem}
         remoteOptions={fetchRick}
         preFetch={false}
         onChange={(selectedItem) => {
@@ -369,12 +443,12 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-      <ComboBox
+      <OmniBox
         placeholder={'pickle rick?'}
         textKey='name'
         valueKey='id'
-        initialText={state.inputValue}
-        initialValue={state.selectedItem}
+        defaultText={state.inputValue}
+        defaultValue={state.selectedItem}
         remoteOptions={fetchRick}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
@@ -396,13 +470,13 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-      <ComboBox
+      <OmniBox
         placeholder={'pickle rick?'}
         allowCreate={true}
         textKey='name'
         valueKey='id'
-        initialText={state.inputValue}
-        initialValue={state.selectedItem}
+        defaultText={state.inputValue}
+        defaultValue={state.selectedItem}
         remoteOptions={fetchRick}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
@@ -424,13 +498,13 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-      <ComboBox
+      <OmniBox
         placeholder={'pickle rick?'}
         allowCreate={true}
         textKey='name'
         valueKey='id'
-        initialText={state.inputValue}
-        initialValue={state.selectedItem}
+        defaultText={state.inputValue}
+        defaultValue={state.selectedItem}
         remoteOptions={fetchRick}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
@@ -451,12 +525,12 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-      <ComboBox
+      <OmniBox
         placeholder={'pickle rick?'}
         textKey='name'
         valueKey='id'
-        initialText={state.inputValue}
-        initialValue={state.selectedItem}
+        defaultText={state.inputValue}
+        defaultValue={state.selectedItem}
         remoteOptions={fetchRick}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
@@ -497,13 +571,13 @@ storiesOf('ComboBox', module)
     });
 
     return (<>
-      <ComboBox
+      <OmniBox
         placeholder={'pickle rick?'}
         allowCreate={true}
         textKey='name'
         valueKey='id'
-        initialText={state.inputValue}
-        initialValue={state.selectedItem}
+        defaultText={state.inputValue}
+        defaultValue={state.selectedItem}
         remoteOptions={fetchRick}
         onChange={(selectedItem) => {
           setState({...state, selectedItem})
