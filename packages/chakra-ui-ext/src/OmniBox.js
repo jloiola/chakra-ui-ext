@@ -228,7 +228,7 @@ const OmniBox = forwardRef(({
       // if an item is set dont re-fetch unless its on the first load
       // and preFetch is set
       if(remoteOptions && !_preFetch ) {
-        setPreFetch(false);
+        setPreFetch(false); 
         return;
       }
 
@@ -275,9 +275,7 @@ const OmniBox = forwardRef(({
       setLoading(true);
 
       const items = await fetchFunction(inputValue);
-      console.log(items, 'items')
       const found = findSelected(items, {selectedItem, inputValue, valueKey, textKey})
-      console.log(found, 'found')
 
       if(allowCreate && !found && inputValue.toString().trim()) {
         items.unshift({
@@ -301,16 +299,14 @@ const OmniBox = forwardRef(({
   };  
 
   useEffect(() => {
-    
     let text = defaultText.toString().trim();
-    const value = getSelectedValue(defaultValue);
     const item = getSelectedItem(defaultValue);
 
     if(hasValue(item)) {
       selectItem(item);
       text = getSelectedText(item)
     }
-
+    
     if(text) {
       setInputValue(text)
     }

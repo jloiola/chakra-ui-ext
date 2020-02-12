@@ -49,6 +49,8 @@ storiesOf('OmniBox', module)
           defaultValue={state.selectedItem}
           remoteOptions={() => fetchRick('sanchez')}
           inputBehavior={'none'}
+          valueKey={'id'}
+          textKey={'name'}
           onChange={(selectedItem) => {
             setState((state) => ({...state, selectedItem}))
           }}
@@ -64,7 +66,7 @@ storiesOf('OmniBox', module)
   .add('Remote select only w/value', () =>  {
 
     const [state, setState] = useState({
-      selectedItem: {id: 1},
+      selectedItem: {id: 1, name: "Rick Sanchez"},
     });
 
     return (<>
