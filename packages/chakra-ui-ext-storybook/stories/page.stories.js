@@ -2,12 +2,10 @@ import React, {useState} from 'react';
 import {DateTime} from 'luxon';
 import { storiesOf } from '@storybook/react';
 import {Icon, Box} from '@chakra-ui/core';
-import {ResponsivePage} from 'chakra-ui-ext';
+import {ResponsivePage, ErrorPage} from 'chakra-ui-ext';
 
-storiesOf('Responsive Page', module)
-  .addParameters({
-    component: ResponsivePage
-  })
+storiesOf('Pages', module)
+  .addParameters({})
   .add('Basic page', () =>  {
 
     const [state, setState] = useState({});
@@ -31,4 +29,9 @@ storiesOf('Responsive Page', module)
         </Box>
       </ResponsivePage>
     );
-  }); 
+  })
+  .add('Error page', () =>  {
+    return (
+      <ErrorPage title='User not found' icon={<Icon size='5rem' color='yellow.500' name='warning'/>} />
+    );
+  });  
