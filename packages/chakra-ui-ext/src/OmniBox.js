@@ -327,7 +327,6 @@ const OmniBox = forwardRef(({
         selectItem(found);
       }
     }
-
   }, []);
 
   const {inputRef, ...inputProps} = getInputProps({
