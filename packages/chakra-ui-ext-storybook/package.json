@@ -8,7 +8,7 @@
   "dependencies": {
     "@chakra-ui/core": "^0.5.2",
     "chakra-ui-ext": "*",
-    "luxon": "^1.22.0",
+    "luxon": "^1.28.1",
     "react-hook-form": "^4.9.2"
   },
   "devDependencies": {
